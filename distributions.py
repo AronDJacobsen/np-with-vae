@@ -8,7 +8,7 @@ import torch.distributions as dist
 from torch.distributions import constraints
 from torch.distributions.utils import probs_to_logits, logits_to_probs
 
-from .miscelanea import to_one_hot
+# from .miscelanea import to_one_hot
 
 
 class Base(object):
@@ -462,6 +462,11 @@ class Categorical(Base):
         return f'categorical({self.size})'
 
 
+if __name__ == '__main__':
+    normal = Normal()
+    params = (torch.tensor(3), torch.tensor(1))
+    eta1, eta2 = normal.to_naturals(params)
+    print(normal.sample(2, (eta1,eta2)))
 
 
 
