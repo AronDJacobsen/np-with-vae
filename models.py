@@ -118,6 +118,7 @@ class Decoder(nn.Module):
 
         return x_new
 
+
     def log_prob(self, x, z):
         # calculating the log−probability which is later used for ELBO
         prob_d = self.decode(z)[0] # probability output
