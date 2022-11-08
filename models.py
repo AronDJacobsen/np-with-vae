@@ -14,26 +14,35 @@ from pytorch_model_summary import summary
 # importing distributions
 import torch.distributions as dists
 
+# initialized within VAE class 
 class Encoder(nn.Module):
     def __init__(self, encoder_net):
-        super(Encoder, self).__init__()
-
+        super(Encoder, self).__init__() # init parent (nn.module)
+        # encoder_net: torch.Sequential
         self.encoder = encoder_net
 
-    @staticmethod # accessed as a class
+    # VAE reparameterization trick 
+    @staticmethod
     def reparameterization(mu, log_var):
+        """
+        Instead of sampling z directly, which would make backprobagation impossible, 
+        epsilon is sampled instead and z is calculated. 
+        """
         std = torch.exp(0.5*log_var)
-
         eps = torch.randn_like(std)
 
-        return mu + std * eps
+        return mu + std * eps # = z
 
     def encode(self, x):
+        # output of encoder network
         h_e = self.encoder(x)
+
+        # splitting into 2 equal sized chunks
         mu_e, log_var_e = torch.chunk(h_e, 2, dim=1)
 
         return mu_e, log_var_e
 
+    # Sampling z through reparameterization trick
     def sample(self, x=None, mu_e=None, log_var_e=None):
         if (mu_e is None) and (log_var_e is None):
             mu_e, log_var_e = self.encode(x)
@@ -43,6 +52,7 @@ class Encoder(nn.Module):
         z = self.reparameterization(mu_e, log_var_e)
         return z
 
+    # sampling log probability
     def log_prob(self, x=None, mu_e=None, log_var_e=None, z=None):
         if x is not None:
             mu_e, log_var_e = self.encode(x)
@@ -53,6 +63,7 @@ class Encoder(nn.Module):
 
         return log_normal_diag(z, mu_e, log_var_e)
 
+    # forward returns log probability
     def forward(self, x, type='log_prob'):
         assert type in ['encode', 'log_prob'], 'Type could be either encode or log_prob'
         if type == 'log_prob':
