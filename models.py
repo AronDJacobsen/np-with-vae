@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -8,6 +7,7 @@ from sklearn import datasets
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
 import torch.nn.functional as F
+from prob_dists import *
 
 from pytorch_model_summary import summary
 
@@ -190,7 +190,7 @@ class VAE(nn.Module):
         RE = self.decoder.log_prob(x, z) # z is decoded back
         # Kullback–Leibler divergence, regularizer
         KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
-
+        # loss
         if reduction == 'sum':
             return -(RE + KL).sum()
         else:

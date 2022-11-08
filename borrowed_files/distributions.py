@@ -229,6 +229,7 @@ class Normal(Base):
         eta1, eta2 = etas
         return -0.5 * eta1 / eta2, torch.sqrt(-0.5 / eta2)
 
+    # eta 
     def to_naturals(self, params):
         loc, std = params
 
