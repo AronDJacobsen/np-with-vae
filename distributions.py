@@ -7,36 +7,8 @@ import torch
 import torch.distributions as dist
 from torch.distributions import constraints
 from torch.distributions.utils import probs_to_logits, logits_to_probs
-from torch.distributions.relaxed_categorical import ExpRelaxedCategorical
-from torch.distributions.one_hot_categorical import OneHotCategorical
 
 from .miscelanea import to_one_hot
-
-
-class GumbelDistribution(ExpRelaxedCategorical):
-    @torch.no_grad()
-    def sample(self, sample_shape=torch.Size()):
-        return OneHotCategorical(probs=self.probs).sample(sample_shape)
-
-    def rsample(self, sample_shape=torch.Size()):
-        return torch.exp(super().rsample(sample_shape))
-
-    @property
-    def mean(self):
-        return self.probs
-
-    def expand(self, batch_shape, _instance=None):
-        return super().expand(batch_shape[:-1], _instance)
-
-    def log_prob(self, value):
-        return OneHotCategorical(probs=self.probs).log_prob(value)
-
-
-def get_distribution_by_name(name):
-    return {
-        'normal': Normal, 'lognormal': LogNormal, 'gamma': Gamma, 'exponential': Exponential,
-        'bernoulli': Bernoulli, 'poisson': Poisson, 'categorical': Categorical,
-        }[name]
 
 
 class Base(object):
