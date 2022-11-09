@@ -28,12 +28,13 @@ class Boston(Dataset):
                       'categorical': [3],
                        'binary': [3]}
         data = pd.read_csv('datasets/boston.csv')
+        N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:300], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], boston_dtype)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[300:350], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], boston_dtype)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[350:], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], boston_dtype)
         # self.transforms = transforms
 
     def __len__(self):
@@ -46,83 +47,62 @@ class Boston(Dataset):
         #     sample = self.transforms(sample)
         return sample_num, sample_cat
 
-class Avocado(Dataset):
-    """Avocado dataset"""
+class Avocado(Boston, Dataset):
+    """Avocado dataset
+    inherits __len__ and __getitem__ from Boston dataset 
+    """
 
     def __init__(self, mode='train', transforms=None):
-        boston_dtype = {'numeric': [0, 1, 2, 4,5,6,7,8,9,10,11,12,13], 
-                      'categorical': [3],
-                       'binary': [3]}
-        data = pd.read_csv('datasets/boston.csv')
+        avocado_dtype = {'numeric': [1, 2, 3, 4, 5, 6, 7, 8, 9], 
+                        'categorical': [10, 11], 
+                        'binary': [10]}
+        data = pd.read_csv('datasets/avocado.csv',index_col=0)
+        data['Date'] = pd.to_datetime(data['Date'])
+        N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:300], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], avocado_dtype)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[300:350], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], avocado_dtype)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[350:], boston_dtype)
-        # self.transforms = transforms
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], avocado_dtype)
 
-    def __len__(self):
-        return len(self.data_num)
 
-    def __getitem__(self, idx):
-        sample_num = list(self.data_num.iloc[idx].values) # is list necessary?
-        sample_cat = list(self.data_cat.iloc[idx].values) # is list necessary?
-        # if self.transforms:
-        #     sample = self.transforms(sample)
-        return sample_num, sample_cat
-
-class Energy(Dataset):
-    """Energy dataset"""
+class Energy(Boston, Dataset):
+    """Energy dataset
+    inherits __len__ and __getitem__ from Boston dataset 
+    """
 
     def __init__(self, mode='train', transforms=None):
-        boston_dtype = {'numeric': [0, 1, 2, 4,5,6,7,8,9,10,11,12,13], 
-                      'categorical': [3],
-                       'binary': [3]}
-        data = pd.read_csv('datasets/boston.csv')
+        dtypes = {'numeric': [0, 1, 2, 3, 4, 8, 9], 
+                'categorical': [5, 6, 7], 
+                'binary': []}
+        data = pd.read_csv('datasets/energy.csv')
+        data.columns = ['relative_compactness', 'surface_area', 'wall_area', 'roof_area', 'overall_height','orientation', 'glazing_area', 'glazing_area_distribution', 'heating_load', 'cooling_load']
+        N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:300], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], dtypes)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[300:350], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], dtypes)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[350:], boston_dtype)
-        # self.transforms = transforms
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], dtypes)
 
-    def __len__(self):
-        return len(self.data_num)
-
-    def __getitem__(self, idx):
-        sample_num = list(self.data_num.iloc[idx].values) # is list necessary?
-        sample_cat = list(self.data_cat.iloc[idx].values) # is list necessary?
-        # if self.transforms:
-        #     sample = self.transforms(sample)
-        return sample_num, sample_cat
-
-class Bank(Dataset):
-    """Bank dataset"""
+class Bank(Boston, Dataset):
+    """Bank dataset
+        inherits __len__ and __getitem__ from Boston dataset 
+    """
 
     def __init__(self, mode='train', transforms=None):
-        boston_dtype = {'numeric': [0, 1, 2, 4,5,6,7,8,9,10,11,12,13], 
-                      'categorical': [3],
-                       'binary': [3]}
-        data = pd.read_csv('datasets/boston.csv')
+        dtypes = {'numeric': [0, 5, 9, 11, 12, 13, 14], 
+                    'categorical': [1, 2, 3,4,6,7, 8, 10, 15,16], 
+                    'binary': [4, 6, 7, 16]}
+        data = pd.read_csv('datasets/bank-full.csv', sep=';')
+        N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:300], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], dtypes)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[300:350], boston_dtype)
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], dtypes)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[350:], boston_dtype)
-        # self.transforms = transforms
-
-    def __len__(self):
-        return len(self.data_num)
-
-    def __getitem__(self, idx):
-        sample_num = list(self.data_num.iloc[idx].values) # is list necessary?
-        sample_cat = list(self.data_cat.iloc[idx].values) # is list necessary?
-        # if self.transforms:
-        #     sample = self.transforms(sample)
-        return sample_num, sample_cat
+            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], dtypes)
 
 
 if __name__ == '__main__':
