@@ -3,7 +3,6 @@ author: adrianjav
 https://github.com/adrianjav/heterogeneous_vaes/
 '''
 
-
 from __future__ import annotations
 
 from typing import List
@@ -73,7 +72,7 @@ class ProbabilisticModel(object):
         for i, d in enumerate(self):
             pos = self.gathered_index(i)
             data = x[..., i] if mask is None or mask[..., pos].all() else torch.masked_select(x[..., i], mask[..., pos])
-            params += d.params_from_data(data)
+            params += d.params_from_data(data) # accessing the params_from_data function within the distribution. --> i.e. changing to natural parameterisation
         return params
 
     def preprocess_data(self, x, mask=None):

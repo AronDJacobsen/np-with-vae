@@ -5,7 +5,7 @@ import torch
 from train import training
 from models import *
 from dataloaders import Boston
-
+from utils import samples_real, plot_curve, evaluation, get_test_results
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('')
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     likelihood_type = 'categorical'
 
     if likelihood_type == 'categorical':
-        num_vals = 1
+        num_vals = 2 # Should be equal to number of classes -> i.e. dependent on dataset and attribute
     elif likelihood_type == 'bernoulli':
         num_vals = 1
 
@@ -44,10 +44,16 @@ if __name__ == '__main__':
     val_data = Boston(mode='val')
     test_data = Boston(mode='test')
 
-    training_loader = DataLoader(train_data, batch_size=4, shuffle=True)
-    val_loader = DataLoader(val_data, batch_size=4, shuffle=False)
-    test_loader = DataLoader(test_data, batch_size=4, shuffle=False)
+    # TODO: Should batch_size == D? -> only works like so
+    training_loader = DataLoader(train_data, batch_size=D, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
+    val_loader = DataLoader(val_data, batch_size=D, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
+    test_loader = DataLoader(test_data, batch_size=D, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
 
+    ## Creating directory for test results
+    result_dir = 'results/'
+    if not(os.path.exists(result_dir)):
+        os.mkdir(result_dir)
+    name = 'vae'
 
     encoder = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
                             nn.Linear(M, M), nn.LeakyReLU(),
@@ -69,6 +75,10 @@ if __name__ == '__main__':
                        optimizer=optimizer,
                        training_loader=training_loader, val_loader=val_loader)
 
+    print(nll_val)
+
+    # Save and plot test_results
+    get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader)
 
     # ### testing ###
     # logger.log("Training using {}".format(args.device))

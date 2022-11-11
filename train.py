@@ -1,7 +1,13 @@
+import torch
+import numpy as np
+from utils import evaluation, samples_generated
+
 def training(name, max_patience, num_epochs, model, optimizer, training_loader, val_loader):
     nll_val = []
     best_nll = 1000.
     patience = 0
+
+    save_path = "results/vae.model"
 
     # Main loop
     for e in range(num_epochs):
@@ -11,7 +17,13 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
             if hasattr(model, 'dequantization'):
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
-            loss = model.forward(batch)
+
+            # batch[0] -> numerical data
+            # batch[1] -> categorical data
+            # Should be different model for each kind
+            batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head 
+            loss = model.forward(batch) 
+            # TODO: this was also implemented in utils.evaluation and utils.samples_generated
 
             optimizer.zero_grad()
             loss.backward(retain_graph=True)
@@ -23,12 +35,12 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
 
         if e == 0:
             print('saved!')
-            torch.save(model, name + '.model')
+            torch.save(model, save_path)
             best_nll = loss_val
         else:
             if loss_val < best_nll:
                 print('saved!')
-                torch.save(model, name + '.model')
+                torch.save(model, save_path)
                 best_nll = loss_val
                 patience = 0
 

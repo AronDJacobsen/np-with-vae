@@ -35,6 +35,8 @@ class Encoder(nn.Module):
 
     def encode(self, x):
         # output of encoder network
+
+        # x, len 2: (numerical, categorial)
         h_e = self.encoder(x)
 
         # splitting into 2 equal sized chunks
@@ -78,7 +80,7 @@ class Decoder(nn.Module):
 
         self.decoder = decoder_net
         self.distribution = distribution
-        self.num_vals = num_vals
+        self.num_vals = num_vals # depends on num_classes of each attribute
 
     def decode(self, z):
 
@@ -139,6 +141,8 @@ class Decoder(nn.Module):
         elif self.distribution == 'bernoulli':
             log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
 
+        # elif self.distribution == '':
+
         else:
             raise ValueError('Either `categorical` or `bernoulli`')
 
@@ -172,7 +176,7 @@ class VAE(nn.Module):
 
         self.encoder = Encoder(encoder_net=encoder_net)
 
-
+        #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
         self.decoder = Decoder(distribution=likelihood_type, decoder_net=decoder_net, num_vals=num_vals)
         self.prior = Prior(L=L)
 

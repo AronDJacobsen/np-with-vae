@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import torch.nn.functional as F
 
 PI = torch.from_numpy(np.asarray(np.pi))
 EPS = 1.e-5
