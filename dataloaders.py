@@ -17,15 +17,27 @@ def standardise(x:pd.DataFrame, dtypes:dict):
     cols = x.columns[dtypes['numeric']]
     sc = StandardScaler(copy=False)
     x_sc = sc.fit_transform(numerical)
-    numerical = pd.DataFrame(x_sc, columns=cols)
+    numerical_OH = pd.DataFrame(x_sc, columns=cols)
 
     # might want to pass this to the dataloader as well to use the inverse_transform method
     on = OneHotEncoder()
     categoricalf = on.fit_transform(categorical).toarray()
     columns_f = on.get_feature_names_out()
-    categorical = pd.DataFrame(categoricalf, columns=columns_f)
-    categorical = pd.concat([categorical, binary], axis=1)
-    return numerical, categorical 
+    categorical_OH = pd.DataFrame(categoricalf, columns=columns_f)
+    categorical_OH = pd.concat([categorical_OH, binary], axis=1)
+
+    # categorical class-to-idx dict
+    class_idxs = {}
+    for col in columns_f:
+        # get class and corresponding attribute
+        attr, cl = col.split('_')
+        # if new attribute
+        if attr not in class_idxs:
+            class_idxs[attr] = {}
+        # insert class index
+        class_idxs[attr][cl] = len(class_idxs[attr])
+
+    return numerical_OH, categorical_OH, {'numerical': numerical, 'categorical': categorical, 'class_idxs': class_idxs}
 
 class Boston(Dataset):
     """Boston dataset"""
@@ -40,11 +52,11 @@ class Boston(Dataset):
 
         # TODO: make more random and seed dependent?
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], boston_dtype)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[:int(0.6*N)], boston_dtype)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], boston_dtype)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.6*N):int(0.8*N)], boston_dtype)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], boston_dtype)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.8*N):], boston_dtype)
         # self.transforms = transforms
 
     def __len__(self):
@@ -72,12 +84,13 @@ class Avocado(Boston, Dataset):
         data['Date'] = pd.to_datetime(data['Date'])
         N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], avocado_dtype)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[:int(0.6*N)], avocado_dtype)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], avocado_dtype)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.6*N):int(0.8*N)], avocado_dtype)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], avocado_dtype)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.8*N):], avocado_dtype)
 
+#inverse_transform -> onehot_ncoder
 
 class Energy(Boston, Dataset):
     """Energy dataset
@@ -92,11 +105,11 @@ class Energy(Boston, Dataset):
         data.columns = ['relative_compactness', 'surface_area', 'wall_area', 'roof_area', 'overall_height','orientation', 'glazing_area', 'glazing_area_distribution', 'heating_load', 'cooling_load']
         N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], dtypes)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[:int(0.6*N)], dtypes)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], dtypes)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.6*N):int(0.8*N)], dtypes)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], dtypes)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.8*N):], dtypes)
 
 class Bank(Boston, Dataset):
     """Bank dataset
@@ -110,11 +123,11 @@ class Bank(Boston, Dataset):
         data = pd.read_csv('datasets/bank-full.csv', sep=';')
         N = len(data)
         if mode == 'train':
-            self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], dtypes)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[:int(0.6*N)], dtypes)
         elif mode == 'val':
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.6*N):int(0.8*N)], dtypes)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.6*N):int(0.8*N)], dtypes)
         else:
-            self.data_num, self.data_cat = standardise(data.iloc[int(0.8*N):], dtypes)
+            self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.8*N):], dtypes)
 
 
 if __name__ == '__main__':

@@ -228,5 +228,83 @@ class VAE(nn.Module):
         return self.decoder.sample(z)
 
 
+class Baseline():
+
+    """
+    Imputes the mean of each continuous variable, and the mode of the discrete (categorical) variables.
+
+    
+    model = Baseline()
+    model.train(train_data)
+    model.evaluate(test_data, class_idxs = train_data.data_dict['class_idxs']) 
+
+
+    """
+
+    def __init__(self):
+        
+        self.predictions = {}
+
+    def train(self, train_data):
+
+        # Categorical data:
+        categorical = train_data.data_dict['categorical']
+        # class_idx dict:
+        class_idxs = train_data.data_dict['class_idxs']
+        # Numerical data
+        numerical = train_data.data_dict['numerical']
+
+        # init predictions dictionary
+        predictions = {'categorical': {}, 'numerical': {}}
+
+        # calculate imputations
+        for attribute in categorical.keys():
+            predictions['categorical'][attribute] = str(categorical[attribute].value_counts().idxmax()) # Returns category of highest count
+
+        for attribute in numerical.keys():
+            predictions['numerical'][attribute] = (numerical[attribute].mean())
+
+        self.predictions = predictions
+
+    def evaluate(self, test_data, class_idxs):
+
+        # TODO: So far calculates log_prob per categorical attribute, but uses it for nothing
+
+        # Categorical data:
+        categorical = test_data.data_dict['categorical']
+
+        # Translates string class to int class number
+        for attr in categorical:
+            num_classes = len(class_idxs[attr])
+            # Actual predicted class_id (1 X batch_size)
+            x = torch.Tensor([class_idxs[attr][str(obs)] for obs in categorical[attr]])
+            # probability for predictions (num_classes X batch_size) - 
+            # - this corresponds to the same one-hot encoding for predicted class X batch_size
+            pred = torch.Tensor([class_idxs[attr][str(self.predictions['categorical'][attr])] for obs in categorical[attr]])
+            prob_d = []
+            for i in pred:
+                onehot = np.zeros(num_classes)
+                onehot[int(i)] = 1
+                prob_d.append(onehot)
+            prob_d = torch.Tensor(prob_d)
+
+            log_p = log_categorical(x, prob_d, num_classes=num_classes, reduction='sum', dim=-1).sum(-1)
+
+
+        # Numerical data
+        # numerical = test_data.data_dict['numerical']
+
+
+
+
+
+
+
+    
+        
+
+
+
+
 
 
