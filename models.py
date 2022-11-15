@@ -36,7 +36,9 @@ class Encoder(nn.Module):
         # output of encoder network
 
         # x, len 2: (numerical, categorial)
-        h_e = self.encoder(x)
+        h_e = self.encoder(x.float()) 
+        # changed so that it work with numerical and categorial data
+        # however x loses precision for numerical data
 
         # splitting into 2 equal sized chunks
         mu_e, log_var_e = torch.chunk(h_e, 2, dim=1)
@@ -100,15 +102,17 @@ class Decoder(nn.Module):
             prob_d = torch.softmax(h_d, 2)
             # probability output of decoder
             return [prob_d]
-
-        elif self.distribution == 'bernoulli':
-            # Bernoulli distribution has two possible outcomes
-            # output dim: (batch, D*1), where the are outputs and 1 is the single output probability
-            prob_d = torch.sigmoid(h_d)
-            return [prob_d] # TODO: remove this bracket?
+        elif self.distribution == 'gaussian':
+            return h_d
+            # num_vals for gaussian is the number of numerical values in the dataset
+            b = h_d.shape[0]
+            d = h_d.shape[1] // self.num_vals
+            h_d = h_d.view(b, d, self.num_vals)
+            prob_d = torch.normal(self.num_vals, h_d[2]) # (batch, num_vals, 2)
+            return [prob_d]
 
         else:
-            raise ValueError('Either `categorical` or `bernoulli`')
+            raise ValueError('Either `categorical` or `gaussian`')
 
     def sample(self, z):
         prob_d = self.decode(z)[0] # probability output
@@ -122,11 +126,19 @@ class Decoder(nn.Module):
             # we want one sample per number of possible values (e.g. pixel values)
             x_new = torch.multinomial(p, num_samples=1).view(b, m) # new view is (batch, output dims, 1)
 
+        elif self.distribution == 'gaussian':
+            b = prob_d.shape[0] # batch size
+            m = prob_d.shape[1] # output dimension
+            # below is unnecessary because already performed in self.decode()
+            #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
+            p = prob_d.view(-1, self.num_vals) # merging batch and output dims (lists of possible outputs)
+            # we want one sample per number of possible values (e.g. pixel values)
+            x_new = torch.normal(p).view(b, m)
         elif self.distribution == 'bernoulli':
             x_new = torch.bernoulli(prob_d) # output dim is already (batch, output dims, 1)
 
         else:
-            raise ValueError('Either `categorical` or `bernoulli`')
+            raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
 
         return x_new
 
@@ -136,14 +148,17 @@ class Decoder(nn.Module):
         prob_d = self.decode(z)[0] # probability output
         if self.distribution == 'categorical':
             log_p = log_categorical(x, prob_d, num_classes=self.num_vals, reduction='sum', dim=-1).sum(-1)
+        elif self.distribution == 'gaussian':
+            # don't know if reduction is correct
+            # log_var = torch.log(torch.var(prob_d, dim=0))
+            log_var = torch.log(prob_d)
+            log_p = log_normal_diag(x, prob_d, log_var, reduction='sum', dim=-1).sum(-1)
 
         elif self.distribution == 'bernoulli':
             log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
 
-        # elif self.distribution == '':
-
         else:
-            raise ValueError('Either `categorical` or `bernoulli`')
+            raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
 
         return log_p
 

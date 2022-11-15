@@ -13,7 +13,7 @@ def evaluation(test_loader, name=None, model_best=None, epoch=None):
     N = 0.
     for indx_batch, test_batch in enumerate(test_loader):
         #test_batch = torch.stack(test_batch[1]).float() # TODO: To access only one attribute - only needed as long as no multi-head
-        test_batch = test_batch[1]
+        test_batch = test_batch[0]
         # TODO: this was also implemented in train.training and utils.samples_generated
         loss_t = model_best.forward(test_batch, reduction='sum')
         loss = loss + loss_t.item()

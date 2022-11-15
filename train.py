@@ -22,7 +22,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
             # batch[1] -> categorical data
             # Should be different model for each kind
             #batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head
-            batch = batch[1]
+            batch = batch[0] 
             # model returns the loss in forward
             loss = model.forward(batch)
             # TODO: this was also implemented in utils.evaluation and utils.samples_generated
