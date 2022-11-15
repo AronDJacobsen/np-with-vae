@@ -6,16 +6,20 @@ from train import training
 from models import *
 from dataloaders import Boston
 from utils import samples_real, plot_curve, evaluation, get_test_results
+from torch.utils.data import Dataset, DataLoader, random_split
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('')
 
     # general
-    parser.add_argument('--seed', type=int, default=None)
+    parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'])
 
     # model parameters
     parser.add_argument('--lr', help='Starting learning rate',default=3e-4, type=float)
+    parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
+
     parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=1000, type=int)
     parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=20, type=int)
 
@@ -24,30 +28,33 @@ if __name__ == '__main__':
                         default='runs', type=str)
     parser.add_argument('--write', help='Saves the training logs', dest='write',
                         action='store_true')
-    
+
+    # TODO: input argument as batch size
+
     args = parser.parse_args()
 
     logger = Logger(directory=args.log_dir, comment="_HI_VAE", write=args.write)
 
-    D = 64  # input dimension
+    D = 1  # input dimension, e.g. image dimensions
     L = 16  # number of latents
     M = 256  # the number of neurons in scale (s) and translation (t) nets
 
-    likelihood_type = 'categorical'
+    likelihood_type = 'bernoulli'
 
     if likelihood_type == 'categorical':
         num_vals = 2 # Should be equal to number of classes -> i.e. dependent on dataset and attribute
     elif likelihood_type == 'bernoulli':
         num_vals = 1
 
+    # TODO: implement random split based on seed
     train_data = Boston(mode='train')
     val_data = Boston(mode='val')
     test_data = Boston(mode='test')
 
     # TODO: Should batch_size == D? -> only works like so
-    training_loader = DataLoader(train_data, batch_size=D, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
-    val_loader = DataLoader(val_data, batch_size=D, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
-    test_loader = DataLoader(test_data, batch_size=D, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
+    training_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
+    val_loader = DataLoader(val_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
+    test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
 
     ## Creating directory for test results
     result_dir = 'results/'

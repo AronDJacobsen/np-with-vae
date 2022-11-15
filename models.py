@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import torch
 from sklearn.datasets import load_digits
 from sklearn import datasets
-from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
 import torch.nn.functional as F
 from prob_dists import *
@@ -106,7 +105,7 @@ class Decoder(nn.Module):
             # Bernoulli distribution has two possible outcomes
             # output dim: (batch, D*1), where the are outputs and 1 is the single output probability
             prob_d = torch.sigmoid(h_d)
-            return [prob_d]
+            return [prob_d] # TODO: remove this bracket?
 
         else:
             raise ValueError('Either `categorical` or `bernoulli`')
@@ -178,6 +177,11 @@ class VAE(nn.Module):
 
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
         self.decoder = Decoder(distribution=likelihood_type, decoder_net=decoder_net, num_vals=num_vals)
+
+        self.heads = nn.ModuleList([
+            HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
+        ])
+
         self.prior = Prior(L=L)
 
         self.num_vals = num_vals
@@ -188,6 +192,8 @@ class VAE(nn.Module):
         # encoder
         mu_e, log_var_e = self.encoder.encode(x)
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
+
+        x_params = [head(y_shared, s_samples) for head in self.heads]
 
         # ELBO
         # reconstruction error

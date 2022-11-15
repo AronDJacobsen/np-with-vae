@@ -1,34 +1,44 @@
 import pandas as pd
+import torch
 from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import numpy as np
 
 def standardise(x:pd.DataFrame, dtypes:dict):
     '''zero mean and unit variance'''
-    numerical = x.iloc[:, dtypes['numeric']]
-    categorical = x.iloc[:, dtypes['categorical']]
-    # split into numecical and categorical features
+
+    # split into numerical and categorical features
+    numerical = x.iloc[:, dtypes['numeric']].reset_index(drop=True) #(drop=True, inplace=True)
+    categorical = x.iloc[:, dtypes['categorical']].reset_index(drop=True) #(drop=True, inplace=True)
+    binary = x.iloc[:, dtypes['binary']].reset_index(drop=True) #(drop=True, inplace=True)
+
+    # standardizing training data
+    # TODO: should not do it for test data!
     cols = x.columns[dtypes['numeric']]
     sc = StandardScaler(copy=False)
-    x = sc.fit_transform(numerical)
-    numerical = pd.DataFrame(x, columns=cols)
+    x_sc = sc.fit_transform(numerical)
+    numerical = pd.DataFrame(x_sc, columns=cols)
 
     # might want to pass this to the dataloader as well to use the inverse_transform method
     on = OneHotEncoder()
     categoricalf = on.fit_transform(categorical).toarray()
     columns_f = on.get_feature_names_out()
     categorical = pd.DataFrame(categoricalf, columns=columns_f)
-
+    categorical = pd.concat([categorical, binary], axis=1)
     return numerical, categorical 
 
 class Boston(Dataset):
     """Boston dataset"""
 
     def __init__(self, mode='train', transforms=None):
-        boston_dtype = {'numeric': [0, 1, 2, 4,5,6,7,8,9,10,11,12,13], 
-                      'categorical': [3],
-                       'binary': [3]}
+        boston_dtype = {'numeric': [0,1,2,4,5,6,7,8,9,10,11,12,13],
+                        #'categorical': [3],
+                        'categorical': [],
+                        'binary': [3]}
         data = pd.read_csv('datasets/boston.csv')
         N = len(data)
+
+        # TODO: make more random and seed dependent?
         if mode == 'train':
             self.data_num, self.data_cat = standardise(data.iloc[:int(0.6*N)], boston_dtype)
         elif mode == 'val':
@@ -41,8 +51,10 @@ class Boston(Dataset):
         return len(self.data_num)
 
     def __getitem__(self, idx):
-        sample_num = list(self.data_num.iloc[idx].values) # is list necessary?
-        sample_cat = list(self.data_cat.iloc[idx].values) # is list necessary?
+        sample_num = torch.tensor(self.data_num.iloc[idx].values)
+        sample_cat = torch.tensor(self.data_cat.iloc[idx].values).float()
+        if sample_cat[0] == torch.tensor(np.nan):
+            stop = 0
         # if self.transforms:
         #     sample = self.transforms(sample)
         return sample_num, sample_cat

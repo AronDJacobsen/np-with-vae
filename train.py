@@ -7,7 +7,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
     best_nll = 1000.
     patience = 0
 
-    save_path = "results/vae.model"
+    save_path = "results/"
 
     # Main loop
     for e in range(num_epochs):
@@ -21,8 +21,10 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
             # batch[0] -> numerical data
             # batch[1] -> categorical data
             # Should be different model for each kind
-            batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head 
-            loss = model.forward(batch) 
+            #batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head
+            batch = batch[1]
+            # model returns the loss in forward
+            loss = model.forward(batch)
             # TODO: this was also implemented in utils.evaluation and utils.samples_generated
 
             optimizer.zero_grad()
@@ -35,16 +37,16 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
 
         if e == 0:
             print('saved!')
-            torch.save(model, save_path)
+            torch.save(model, save_path + 'vae.model')
             best_nll = loss_val
         else:
-            if loss_val < best_nll:
+            if loss_val < best_nll: # saving the best models
                 print('saved!')
-                torch.save(model, save_path)
+                torch.save(model, save_path + 'vae.model')
                 best_nll = loss_val
                 patience = 0
 
-                samples_generated(name, val_loader, extra_name="_epoch_" + str(e))
+                samples_generated(save_path + 'generated/', name, val_loader, extra_name="_epoch_" + str(e))
             else:
                 patience = patience + 1
 

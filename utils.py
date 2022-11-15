@@ -12,7 +12,8 @@ def evaluation(test_loader, name=None, model_best=None, epoch=None):
     loss = 0.
     N = 0.
     for indx_batch, test_batch in enumerate(test_loader):
-        test_batch = torch.stack(test_batch[1]).float() # TODO: To access only one attribute - only needed as long as no multi-head 
+        #test_batch = torch.stack(test_batch[1]).float() # TODO: To access only one attribute - only needed as long as no multi-head
+        test_batch = test_batch[1]
         # TODO: this was also implemented in train.training and utils.samples_generated
         loss_t = model_best.forward(test_batch, reduction='sum')
         loss = loss + loss_t.item()
@@ -44,11 +45,12 @@ def samples_real(name, test_loader):
     plt.close()
 
 
-def samples_generated(name, data_loader, extra_name=''):
+def samples_generated(save_path, name, data_loader, extra_name=''):
     # TODO: originally: 
     # x = next(iter(data_loader)).detach().numpy()
-    x = torch.stack(next(iter(data_loader))[1]).float().detach().numpy()
-    # To access only one (categorical) attribute - only needed as long as no multi-head 
+    #x = torch.stack(next(iter(data_loader))[1]).float().detach().numpy()
+    x = next(iter(data_loader))[1]
+    # To access only one (categorical) attribute - only needed as long as no multi-head
     # Also done in train.training and utils.evaluation
 
     # GENERATIONS-------
@@ -66,7 +68,7 @@ def samples_generated(name, data_loader, extra_name=''):
         ax.imshow(plottable_image, cmap='gray')
         ax.axis('off')
 
-    plt.savefig(name + '_generated_images' + extra_name + '.pdf', bbox_inches='tight')
+    plt.savefig(save_path + name + '_generated_images' + extra_name + '.pdf', bbox_inches='tight')
     plt.close()
 
 
