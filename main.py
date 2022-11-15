@@ -35,7 +35,14 @@ if __name__ == '__main__':
 
     logger = Logger(directory=args.log_dir, comment="_HI_VAE", write=args.write)
 
-    D = 1  # input dimension, e.g. image dimensions
+
+    D_dict = {'Bank': None,
+              'Boston': 14,
+              'Avocado': None,
+              'Energy': None,
+              }
+
+    D = D_dict['Boston']  # input dimension, e.g. image dimensions
     L = 16  # number of latents
     M = 256  # the number of neurons in scale (s) and translation (t) nets
 
