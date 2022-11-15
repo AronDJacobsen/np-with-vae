@@ -193,7 +193,7 @@ class VAE(nn.Module):
         mu_e, log_var_e = self.encoder.encode(x)
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
 
-        x_params = [head(y_shared, s_samples) for head in self.heads]
+        #x_params = [head(y_shared, s_samples) for head in self.heads]
 
         # ELBO
         # reconstruction error
