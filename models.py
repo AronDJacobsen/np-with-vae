@@ -178,9 +178,9 @@ class VAE(nn.Module):
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
         self.decoder = Decoder(distribution=likelihood_type, decoder_net=decoder_net, num_vals=num_vals)
 
-        self.heads = nn.ModuleList([
-            HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
-        ])
+        #self.heads = nn.ModuleList([
+        #    HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
+        #])
 
         self.prior = Prior(L=L)
 
