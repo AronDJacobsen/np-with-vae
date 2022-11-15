@@ -103,13 +103,15 @@ class Decoder(nn.Module):
             # probability output of decoder
             return [prob_d]
         elif self.distribution == 'gaussian':
-            return h_d
+            # return h_d
             # num_vals for gaussian is the number of numerical values in the dataset
             b = h_d.shape[0]
             d = h_d.shape[1] // self.num_vals
             h_d = h_d.view(b, d, self.num_vals)
-            prob_d = torch.normal(self.num_vals, h_d[2]) # (batch, num_vals, 2)
+            prob_d = torch.normal(h_d) # (batch, num_vals, 2)
             return [prob_d]
+
+        # TODO: concatenate categorical and gaussian distributions
 
         else:
             raise ValueError('Either `categorical` or `gaussian`')
@@ -150,8 +152,8 @@ class Decoder(nn.Module):
             log_p = log_categorical(x, prob_d, num_classes=self.num_vals, reduction='sum', dim=-1).sum(-1)
         elif self.distribution == 'gaussian':
             # don't know if reduction is correct
-            # log_var = torch.log(torch.var(prob_d, dim=0))
-            log_var = torch.log(prob_d)
+            log_var = torch.log(torch.var(prob_d, dim=0))
+            # log_var = torch.log(prob_d)
             log_p = log_normal_diag(x, prob_d, log_var, reduction='sum', dim=-1).sum(-1)
 
         elif self.distribution == 'bernoulli':

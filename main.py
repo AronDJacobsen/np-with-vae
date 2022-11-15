@@ -43,13 +43,12 @@ if __name__ == '__main__':
               }
 
     D = D_dict['Boston']  # input dimension, e.g. image dimensions
-    L = 16  # number of latents
+    L = D  # number of latents
     M = 256  # the number of neurons in scale (s) and translation (t) nets
 
     # likelihood_type = 'categorical'
     likelihood_type = 'gaussian'
     num_vals = 2
-    D = 13 # number of numerical attributes
 
     if likelihood_type == 'categorical':
         num_vals = 2 # Should be equal to number of classes -> i.e. dependent on dataset and attribute
