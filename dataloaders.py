@@ -1,8 +1,128 @@
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import numpy as np
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+
+def load_dataset(dataset_name, batch_size, shuffle, seed):
+
+
+    # TODO: sep=';'??
+    data = pd.read_csv(f'datasets/{dataset_name}.csv')
+
+    # TODO: pre-process this instead?
+    if dataset_name == 'avocado':
+        data = data.drop(columns=['Unnamed: 0'])
+
+    var_info = dataset_info(dataset_name, data)
+
+
+    # SPLITTING DATA
+    # split to get test data
+    #N_train = int(len(data) * 0.8)
+    #N_test = len(data) - N_train
+    #train_data, test_data = random_split(data, [N_train, N_test], generator=torch.Generator().manual_seed(seed))
+    # new train data instance for validation split
+    #train_data = data.iloc[train_data.indices]
+    #N_train = int(len(train_data) * 0.8)
+    #N_val = len(train_data) - N_train
+    #train_data, test_data = random_split(train_data, [N_train, N_val], generator=torch.Generator().manual_seed(seed))
+
+    train_data, test_data = train_test_split(data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
+    # again, split to get val data (on train data)
+    train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
+
+    # normalize training data (similar to Ma et al.)
+    #    - then use sigmoid activation function
+    train_min = train_data.min()
+    train_max = train_data.max()
+    train_data = (train_data - train_min) / (train_max - train_min)
+    val_data = (val_data - train_min) / (train_max - train_min)
+    test_data = (test_data - train_min) / (train_max - train_min)
+
+    # create a data class with __getitem__, i.e. iterable
+    train_data = iterate_data(train_data)
+    val_data = iterate_data(val_data)
+    test_data = iterate_data(test_data)
+
+
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False, drop_last=True)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, drop_last=True)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, drop_last=True)
+
+    return (var_info, (train_loader, val_loader, test_loader))
+
+
+def dataset_info(dataset_name, data):
+
+    boston_dtype = {'numeric': [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                    'categorical': [3]}
+
+    # TODO: index start with 1?
+    avocado_dtype = {'numeric': [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                     'categorical': [10, 11]}
+
+    energy_dtypes = {'numeric': [0, 1, 2, 3, 4, 8, 9],
+                     'categorical': [5, 6, 7]}
+
+    bank_dtypes = {'numeric': [0, 5, 9, 11, 12, 13, 14],
+                   'categorical': [1, 2, 3, 4, 6, 7, 8, 10, 15, 16]}
+
+
+    dataset_info_container = {
+        'boston': boston_dtype,
+        'avocado': avocado_dtype,
+        'energy': energy_dtypes,
+        'bank': bank_dtypes}
+
+    # getting dtype variable information
+    var_dtype = dataset_info_container[dataset_name]
+    #inv_var_dtype = {v: k for k, v in var_dtype.items()}
+    inv_var_dtype = {}
+    for k, v in var_dtype.items():
+        for x in v:
+            inv_var_dtype[x] = k
+    # finding number of values per variable
+    var_info = {}
+
+    for idx, variable_name in enumerate(list(data.columns)):
+        if inv_var_dtype[idx] == 'categorical':
+           unique = len(pd.unique(data[variable_name]))
+           var_info[idx] = {'name': variable_name, 'dtype': 'categorical', 'num_vals': unique}
+
+        else:
+            # normal distribution:
+            var_info[idx] = {'name': variable_name, 'dtype': 'numerical', 'num_vals': 2}
+
+
+
+    return var_info
+
+
+class iterate_data(Dataset):
+
+    def __init__(self, data):
+        # converting to tensor
+        self.N = len(data)
+        self.torch_data = torch.tensor(data.values)
+
+    def __len__(self):
+        return self.N
+
+    def __getitem__(self, idx):
+        batch = self.torch_data[idx, :]
+
+        return batch
+
+
+
+
+
+
+
+### PREVIOUS ###
 
 def standardise(x:pd.DataFrame, dtypes:dict):
     '''zero mean and unit variance'''
@@ -44,8 +164,7 @@ class Boston(Dataset):
 
     def __init__(self, mode='train', transforms=None):
         boston_dtype = {'numeric': [0,1,2,4,5,6,7,8,9,10,11,12,13],
-                        #'categorical': [3],
-                        'categorical': [],
+                        'categorical': [3],
                         'binary': [3]}
         data = pd.read_csv('datasets/boston.csv')
         N = len(data)
@@ -130,6 +249,8 @@ class Bank(Boston, Dataset):
             self.data_num, self.data_cat, self.data_dict = standardise(data.iloc[int(0.8*N):], dtypes)
 
 
+
+'''
 if __name__ == '__main__':
     train_data = Boston(mode='train')
     val_data = Boston(mode='val')
@@ -143,3 +264,7 @@ if __name__ == '__main__':
     tester_loader = DataLoader(test_data, batch_size=1, shuffle=False)
 
     print(next(iter(tester_loader)))
+
+'''
+
+

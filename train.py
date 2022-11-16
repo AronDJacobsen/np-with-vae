@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from utils import evaluation, samples_generated
 
-def training(name, max_patience, num_epochs, model, optimizer, training_loader, val_loader):
+def training(name, max_patience, num_epochs, model, optimizer, train_loader, val_loader):
     nll_val = []
     best_nll = 1000.
     patience = 0
@@ -13,7 +13,7 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
     for e in range(num_epochs):
         # TRAINING
         model.train()
-        for indx_batch, batch in enumerate(training_loader):
+        for indx_batch, batch in enumerate(train_loader):
             if hasattr(model, 'dequantization'):
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
@@ -21,11 +21,11 @@ def training(name, max_patience, num_epochs, model, optimizer, training_loader, 
             # batch[0] -> numerical data
             # batch[1] -> categorical data
 
-            numerical = batch[0].float()
-            categorical = batch[1]
+            #numerical = batch[0].float()
+            #categorical = batch[1]
 
             # concatenate into big input
-            batch = torch.cat((numerical, categorical), dim=1)
+            #batch = torch.cat((numerical, categorical), dim=1)
 
             # Should be different model for each kind
             #batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head

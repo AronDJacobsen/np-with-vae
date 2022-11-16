@@ -76,11 +76,11 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, decoder_net, distribution='categorical', num_vals=None):
+    def __init__(self, decoder_net, var_info, num_vals=None):
         super(Decoder, self).__init__()
 
         self.decoder = decoder_net
-        self.distribution = distribution
+        self.var_info = var_info
         self.num_vals = num_vals # depends on num_classes of each attribute
 
     def decode(self, z):
@@ -88,8 +88,26 @@ class Decoder(nn.Module):
         # input are latent variables, 2*L (mean and variance)
         # the output depends on expected output distribution, see below.
         h_d = self.decoder(z) # node: 'decode' and 'decoder' to minimize confusion
+        prob_d = torch.zeros(h_d.shape)
         # hidden output of decoder
+        idx = 0
+        #
+        for var in self.var_info:
+            if self.var_info[var]['dtype'] == 'categorical':
+                num_vals = self.var_info[var]['num_vals']
+                prob_d[:, idx:idx+num_vals] = torch.softmax(h_d[:, idx:idx + num_vals], axis=1)
+                idx += num_vals
 
+            elif self.var_info[var]['dtype'] == 'numerical':
+                # TODO: apply sigmoid activate? since data is normalized [0,1] then mu and sigma can't exceed 0 and 1?
+                # gaussian always outputs two values
+                num_vals = 2
+                prob_d[:,idx:idx+num_vals] = torch.sigmoid(h_d[:, idx:idx+num_vals])
+                idx += num_vals
+            else:
+                raise ValueError('Either `categorical` or `gaussian`')
+
+        '''
         if self.distribution == 'categorical':
             # Categorical distribution has multiple possible outputs
             # output dim: (batch, D*L values) where D are all outputs and L is the number of possible values per output
@@ -101,7 +119,7 @@ class Decoder(nn.Module):
             #   - e.g. probs for pixel values for each pixel in img
             prob_d = torch.softmax(h_d, 2)
             # probability output of decoder
-            return [prob_d]
+            return prob_d
         elif self.distribution == 'gaussian':
             # return h_d
             # num_vals for gaussian is the number of numerical values in the dataset
@@ -109,15 +127,17 @@ class Decoder(nn.Module):
             d = h_d.shape[1] // self.num_vals
             h_d = h_d.view(b, d, self.num_vals)
             prob_d = torch.normal(h_d) # (batch, num_vals, 2)
-            return [prob_d]
-
+            return prob_d
+        '''
         # TODO: concatenate categorical and gaussian distributions
 
-        else:
-            raise ValueError('Either `categorical` or `gaussian`')
+
+        return prob_d
+
+
 
     def sample(self, z):
-        prob_d = self.decode(z)[0] # probability output
+        prob_d = self.decode(z) # probability output
 
         if self.distribution == 'categorical':
             b = prob_d.shape[0] # batch size
@@ -147,7 +167,7 @@ class Decoder(nn.Module):
 
     def log_prob(self, x, z):
         # calculating the log−probability which is later used for ELBO
-        prob_d = self.decode(z)[0] # probability output
+        prob_d = self.decode(z) # probability output
         if self.distribution == 'categorical':
             log_p = log_categorical(x, prob_d, num_classes=self.num_vals, reduction='sum', dim=-1).sum(-1)
         elif self.distribution == 'gaussian':
@@ -186,14 +206,14 @@ class Prior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, encoder_net, decoder_net, num_vals=256, L=16, likelihood_type='categorical'):
+    def __init__(self, encoder_net, decoder_net, num_vals, L, var_info):
         super(VAE, self).__init__()
 
 
         self.encoder = Encoder(encoder_net=encoder_net)
 
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
-        self.decoder = Decoder(distribution=likelihood_type, decoder_net=decoder_net, num_vals=num_vals)
+        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, num_vals=num_vals)
 
         #self.heads = nn.ModuleList([
         #    HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
@@ -203,7 +223,7 @@ class VAE(nn.Module):
 
         self.num_vals = num_vals
 
-        self.likelihood_type = likelihood_type
+        self.var_info = var_info # contains type of likelihood for variables
 
     def forward(self, x, reduction='avg'):
         # encoder
