@@ -82,6 +82,7 @@ class Decoder(nn.Module):
         self.decoder = decoder_net
         self.var_info = var_info
         self.num_vals = num_vals # depends on num_classes of each attribute
+        self.distribution = 'gaussian'
 
     def decode(self, z):
 
@@ -139,6 +140,7 @@ class Decoder(nn.Module):
     def sample(self, z):
         prob_d = self.decode(z) # probability output
 
+
         if self.distribution == 'categorical':
             b = prob_d.shape[0] # batch size
             m = prob_d.shape[1] # output dimension
@@ -168,19 +170,28 @@ class Decoder(nn.Module):
     def log_prob(self, x, z):
         # calculating the log−probability which is later used for ELBO
         prob_d = self.decode(z) # probability output
-        if self.distribution == 'categorical':
-            log_p = log_categorical(x, prob_d, num_classes=self.num_vals, reduction='sum', dim=-1).sum(-1)
-        elif self.distribution == 'gaussian':
-            # don't know if reduction is correct
-            log_var = torch.log(torch.var(prob_d, dim=0))
-            # log_var = torch.log(prob_d)
-            log_p = log_normal_diag(x, prob_d, log_var, reduction='sum', dim=-1).sum(-1)
+        log_p = torch.zeros(len(self.var_info))
+        idx = 0
+        for var in self.var_info:
+            if self.var_info[var]['dtype'] == 'categorical':
+                num_vals = self.var_info[var]['num_vals']
+                log_p[var] = log_categorical(x[:, idx:idx+1], prob_d[:, idx:idx+num_vals], num_classes=self.num_vals, reduction='sum', dim=-1).sum(-1)
+                idx += num_vals
 
-        elif self.distribution == 'bernoulli':
-            log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
+            elif self.var_info[var]['dtype'] == 'numerical': # Gaussian
+                num_vals = self.var_info[var]['num_vals']
+                # don't know if reduction is correct
+                log_var = torch.log(torch.var(prob_d[:, idx:idx+num_vals], dim=0))
+                # log_var = torch.log(prob_d)
+                log_p[var] = log_normal_diag(x[:, idx:idx+1], prob_d[:, idx:idx+num_vals], log_var, reduction='sum', dim=-1).sum(-1)
 
-        else:
-            raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
+                idx += num_vals
+
+            elif self.var_info[var]['dtype'] == 'bernoulli':
+                log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
+
+            else:
+                raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
 
         return log_p
 
