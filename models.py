@@ -280,58 +280,104 @@ class Baseline():
 
     """
 
-    def __init__(self):
+    def __init__(self, var_info, train_loader, test_loader):
         
+        self.var_info = var_info
+        self.train_loader = train_loader
+        self.test_loader = test_loader
         self.predictions = {}
+        self.ids = {"categorical": [[i, var['name']] for i, var in enumerate(self.var_info.values()) if var['dtype'] == 'categorical'], 
+                    "numerical": [[i, var['name']] for i, var in enumerate(self.var_info.values()) if var['dtype'] == 'numerical']}
+        self.log_p = None
+        self.MSE = {} # MSE's per numerical variable
+        self.accuracy = {} # Accuracies per categorical variable
 
-    def train(self, train_data):
 
-        # Categorical data:
-        categorical = train_data.data_dict['categorical']
-        # class_idx dict:
-        class_idxs = train_data.data_dict['class_idxs']
-        # Numerical data
-        numerical = train_data.data_dict['numerical']
+    def train(self):
 
-        # init predictions dictionary
+        # Concatenating batches
+        data = []
+        for indx_batch, batch in enumerate(self.train_loader):
+            data.append(batch)
+        data = torch.cat(data)
+
         predictions = {'categorical': {}, 'numerical': {}}
 
-        # calculate imputations
-        for attribute in categorical.keys():
-            predictions['categorical'][attribute] = str(categorical[attribute].value_counts().idxmax()) # Returns category of highest count
+        # Returns class of highest count per attribute
+        for attr, _ in self.ids['categorical']:
+            predictions['categorical'][attr] = np.argmax(np.unique(data[:,attr], return_counts=True)[1])
 
-        for attribute in numerical.keys():
-            predictions['numerical'][attribute] = (numerical[attribute].mean())
+        # Avg. prediction per attribute
+        for attr, _ in self.ids['numerical']:
+            # mean and variance
+            predictions['numerical'][attr] = (data[:,attr].mean(), data[:,attr].var())
 
         self.predictions = predictions
+            
 
-    def evaluate(self, test_data, class_idxs):
+    def evaluate(self):
 
-        # TODO: So far calculates log_prob per categorical attribute, but uses it for nothing
+        # Concatenating batches
+        data = []
+        for indx_batch, batch in enumerate(self.test_loader):
+            data.append(batch)
+        data = torch.cat(data)
 
-        # Categorical data:
-        categorical = test_data.data_dict['categorical']
+        self.log_p = 0
 
-        # Translates string class to int class number
-        for attr in categorical:
-            num_classes = len(class_idxs[attr])
-            # Actual predicted class_id (1 X batch_size)
-            x = torch.Tensor([class_idxs[attr][str(obs)] for obs in categorical[attr]])
-            # probability for predictions (num_classes X batch_size) - 
-            # - this corresponds to the same one-hot encoding for predicted class X batch_size
-            pred = torch.Tensor([class_idxs[attr][str(self.predictions['categorical'][attr])] for obs in categorical[attr]])
-            prob_d = []
-            for i in pred:
-                onehot = np.zeros(num_classes)
-                onehot[int(i)] = 1
-                prob_d.append(onehot)
-            prob_d = torch.Tensor(prob_d)
+        # Calculating and summing log probabilities per 
+        for attr, _ in self.ids['categorical']:
+            num_classes = self.var_info[attr]['num_vals']
+            # Actual class_id (1 X batch_size)
+            x = data[:, attr]
 
-            log_p = log_categorical(x, prob_d, num_classes=num_classes, reduction='sum', dim=-1).sum(-1)
+            # predicted class_id
+            predicted_class = self.predictions['categorical'][attr]
+
+            # Calculating accuracy for categorical variables
+            self.accuracy[attr] = np.mean([obs == predicted_class for obs in x])
+
+            # One-hotting entire column based on predicted class
+            onehot = np.zeros((data.shape[0], num_classes))
+            onehot[:,predicted_class] = 1
+
+            prob_d = torch.Tensor(onehot)
+
+            self.log_p += log_categorical(x, prob_d, num_classes=num_classes, reduction='sum', dim=-1).sum(-1)
+
+        for attr, _ in self.ids['numerical']:
+
+            x = data[:, attr]
+
+            # Calculating MSE for numerical variables
+            mu, var = self.predictions['numerical'][attr]
+            self.MSE[attr] = ((x-mu)**2).mean()
+
+            # TODO: Should be exchanged for a normal (per variable (in prob dist))
+            log_normal_diag(data, mu, var.log(), reduction=None, dim=-1).sum(-1)
+
+    def plot_results(self, plotting = True):
+
+        if plotting:
+            plt.rcParams["figure.figsize"] = (10,4)
+            # plotting
+            fig, [ax1, ax2] = plt.subplots(2, 1)
+            fig.subplots_adjust(hspace=0.6)
+
+            ax1.bar([attr_name for (attr, attr_name) in self.ids['numerical']], self.MSE.values())
+            ax1.title.set_text('MSE for numerical variables - Baseline')
+
+            ax2.bar([attr_name for (attr, attr_name) in self.ids['categorical']], self.accuracy.values())
+            ax2.title.set_text('Acc. for categorical variables - Baseline')
+            fig.show()
+
+
 
 
         # Numerical data
         # numerical = test_data.data_dict['numerical']
+        # mu var af træningsdata
+            # l
 
 
 

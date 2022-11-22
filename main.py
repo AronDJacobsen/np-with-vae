@@ -10,6 +10,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser('')
 
     # general
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--write', help='Saves the training logs', dest='write',
                         action='store_true')
     # dataset
-    parser.add_argument('--dataset', type=str, default='boston', choices=['boston', 'avocado', 'energy', 'bank'])
+    parser.add_argument('--dataset', type=str, default='avocado', choices=['boston', 'avocado', 'energy', 'bank'])
 
     args = parser.parse_args()
     logger = Logger(directory=args.log_dir, comment="_VAE", write=args.write)
@@ -43,32 +44,37 @@ if __name__ == '__main__':
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
-    # TODO: implement random split based on seed
-    #train_data = Boston(mode='train')
-    #val_data = Boston(mode='val')
-    #test_data = Boston(mode='test')
-
-    # TODO: Should batch_size == D? -> only works like so
-
-    #training_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
-    #val_loader = DataLoader(val_data, batch_size=args.batch_size, shuffle=False, drop_last=True) 
-    #test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=True)
 
     # Loading dataset
     # information about variables and dataset loaders
     output = load_dataset(dataset_name=args.dataset, batch_size=args.batch_size, shuffle=True, seed=args.seed)
     # extracting output
-    var_info, loaders = output
+    info, loaders = output
+    (var_info, var_dtype) = info
     train_loader, val_loader, test_loader = loaders
 
     # finding values for encoder and decoder networks
-    D = len(var_info.keys()) # total number of variables in data
-    L = D  # number of latents (later 2x, i.e. mu and sigma per variable, i.e. output dim of encoder)
+    L = len(var_info.keys())  # number of latents, i.e. z, (later 2x, i.e. mu and sigma per variable but then sample z)
     # total of the number of values per variable (i.e. output dim of decoder)
     total_num_vals = 0
+    D = 0 # total number of variables in data
     for var in var_info.keys():
         total_num_vals += var_info[var]['num_vals']
+        # categorical input dimension is one-hot thus num_vals is input
+        if var in var_dtype['categorical']: # todo and num_vals
+            D += var_info[var]['num_vals']
+        # numerical just har input dim of 1
+        else:
+            D += 1
 
+    # training, evaluating and plotting results for baseline. 
+    baseline = Baseline(var_info, train_loader, test_loader)
+    baseline.train()
+    baseline.evaluate()
+    baseline.plot_results(plotting = True)
+
+
+    # TODO: make hparam
     M = 256  # the number of neurons in scale (s) and translation (t) nets, i.e. hidden dimension in decoder/encoder
 
 
