@@ -32,7 +32,6 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='boston', choices=['boston', 'avocado', 'energy', 'bank'])
 
     args = parser.parse_args()
-
     logger = Logger(directory=args.log_dir, comment="_VAE", write=args.write)
 
     ## Creating directory for test results
@@ -41,6 +40,8 @@ if __name__ == '__main__':
         os.mkdir(result_dir)
     name = 'vae'
 
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
 
     # TODO: implement random split based on seed
     #train_data = Boston(mode='train')
