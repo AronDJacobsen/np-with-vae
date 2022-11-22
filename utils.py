@@ -1,12 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+from models import VAE
 
-def evaluation(test_loader, name=None, model_best=None, epoch=None):
+def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=256):
     # EVALUATION
     if model_best is None:
+        D = len(var_info.keys())
+        L = D
+        total_num_vals = 0
+        for var in var_info.keys():
+            total_num_vals += var_info[var]['num_vals']
+        model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M)
         # load best performing model
-        model_best = torch.load(name + '.model')
+        model_best.load_state_dict(torch.load('results/'+name+'.model'))
 
     model_best.eval()
     loss = 0.
@@ -90,8 +97,8 @@ def plot_curve(name, nll_val):
     plt.show()
     plt.close()
 
-def get_test_results(nll_val, result_path, test_loader):
-    test_loss = evaluation(name=result_path, test_loader=test_loader)
+def get_test_results(nll_val, result_path, test_loader,var_info):
+    test_loss = evaluation(test_loader, var_info, name=result_path)
     f = open(result_path + '_test_loss.txt', "w")
     f.write(str(test_loss))
     f.close()

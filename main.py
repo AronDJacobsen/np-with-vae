@@ -74,17 +74,11 @@ if __name__ == '__main__':
 
     # TODO: do this in the model
     # creating encoder and decoder network
-    encoder = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
-                            nn.Linear(M, M), nn.LeakyReLU(),
-                            nn.Linear(M, 2 * L))
-
-    decoder = nn.Sequential(nn.Linear(L, M), nn.LeakyReLU(),
-                            nn.Linear(M, M), nn.LeakyReLU(),
-                            nn.Linear(M, total_num_vals))
+    
 
 
     prior = torch.distributions.MultivariateNormal(torch.zeros(L), torch.eye(L))
-    model = VAE(encoder_net=encoder, decoder_net=decoder, total_num_vals=total_num_vals, L=L, var_info = var_info)
+    model = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M)
 
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
@@ -92,12 +86,12 @@ if __name__ == '__main__':
     # Training procedure
     nll_val = training(name=logger.dir, max_patience=args.max_patience, num_epochs=args.max_epochs, model=model,
                        optimizer=optimizer,
-                       train_loader=train_loader, val_loader=val_loader)
+                       train_loader=train_loader, val_loader=val_loader,var_info=var_info)
 
     print(nll_val)
 
     # Save and plot test_results
-    get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader)
+    get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader,var_info=var_info)
 
     # ### testing ###
     # logger.log("Training using {}".format(args.device))

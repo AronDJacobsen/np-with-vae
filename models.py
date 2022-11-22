@@ -82,7 +82,7 @@ class Decoder(nn.Module):
         self.decoder = decoder_net
         self.var_info = var_info
         self.total_num_vals = total_num_vals # depends on num_classes of each attribute
-        self.distribution = 'gaussian'
+        # self.distribution = 'gaussian'
 
     def decode(self, z):
 
@@ -131,40 +131,43 @@ class Decoder(nn.Module):
             return prob_d
         '''
         # TODO: concatenate categorical and gaussian distributions
-
-
         return prob_d
 
-
-
     def sample(self, z):
+        # TODO: cannot do flatten if z is batched
         prob_d = self.decode(z) # probability output
+        # prob_d has [mu1, sigma1, mu2, sigma2, ...]
+        x_news = torch.zeros(prob_d.size()[0], len(self.var_info))
+        for batch in range(prob_d.size()[0]):
+            vare = 0
+            for var in self.var_info:
+                pmu = torch.tensor([prob_d[batch, vare]])
+                psigma = prob_d[batch, vare+1]
+                vare = var + 2
+                if self.var_info[var]['dtype'] == 'categorical':
+                    # b = prob_d.shape[0] # batch size
+                    # m = prob_d.shape[1] # output dimension
+                    # below is unnecessary because already performed in self.decode()
+                    #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
+                    # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
+                    # we want one sample per number of possible values (e.g. pixel values)
+                    x_new = torch.multinomial(pmu, num_samples=1) # .view(b, m) # new view is (batch, output dims, 1)
+                    x_news[batch, var] = x_new
 
-
-        if self.distribution == 'categorical':
-            b = prob_d.shape[0] # batch size
-            m = prob_d.shape[1] # output dimension
-            # below is unnecessary because already performed in self.decode()
-            #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-            p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
-            # we want one sample per number of possible values (e.g. pixel values)
-            x_new = torch.multinomial(p, num_samples=1).view(b, m) # new view is (batch, output dims, 1)
-
-        elif self.distribution == 'gaussian':
-            b = prob_d.shape[0] # batch size
-            m = prob_d.shape[1] # output dimension
-            # below is unnecessary because already performed in self.decode()
-            #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-            p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
-            # we want one sample per number of possible values (e.g. pixel values)
-            x_new = torch.normal(p).view(b, m)
-        elif self.distribution == 'bernoulli':
-            x_new = torch.bernoulli(prob_d) # output dim is already (batch, output dims, 1)
-
-        else:
-            raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
-
-        return x_new
+                elif self.var_info[var]['dtype'] == 'numerical':
+                    # b = prob_d.shape[0] # batch size
+                    # m = prob_d.shape[1] # output dimension
+                    # below is unnecessary because already performed in self.decode()
+                    #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
+                    # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
+                    # we want one sample per number of possible values (e.g. pixel values)
+                    x_new = torch.normal(pmu,psigma)#.view(b, m)
+                    x_news[batch,var] = x_new
+                # elif self.distribution == 'bernoulli':
+                #     x_new = torch.bernoulli(prob_d) # output dim is already (batch, output dims, 1)
+                else:
+                    raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
+        return x_news
 
 
     def log_prob(self, x, z):
@@ -216,10 +219,16 @@ class Prior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, encoder_net, decoder_net, total_num_vals, L, var_info):
-        super(VAE, self).__init__()
+    def __init__(self, total_num_vals, L, var_info,D,M):
+        super().__init__()
 
+        encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
+                            nn.Linear(M, M), nn.LeakyReLU(),
+                            nn.Linear(M, 2 * L))
 
+        decoder_net = nn.Sequential(nn.Linear(L, M), nn.LeakyReLU(),
+                            nn.Linear(M, M), nn.LeakyReLU(),
+                            nn.Linear(M, total_num_vals))
         self.encoder = Encoder(encoder_net=encoder_net)
 
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
