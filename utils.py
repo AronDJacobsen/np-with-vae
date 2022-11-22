@@ -13,6 +13,7 @@ def evaluation(test_loader, name=None, model_best=None, epoch=None):
     N = 0.
     for indx_batch, test_batch in enumerate(test_loader):
         #test_batch = torch.stack(test_batch[1]).float() # TODO: To access only one attribute - only needed as long as no multi-head
+        # TODO: adjust to normal batch
         numerical = test_batch[0].float()
         categorical = test_batch[1]
 
