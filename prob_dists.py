@@ -25,6 +25,7 @@ def log_bernoulli(x, p, reduction=None, dim=None):
     else:
         return log_p
 
+# TODO: log normal per class as well (how likely is mu wrt. a mu/sigma)
 def log_normal_diag(x, mu, log_var, reduction=None, dim=None):
     D = x.shape[1]
     log_p = -0.5 * D * torch.log(2. * PI) - 0.5 * log_var - 0.5 * torch.exp(-log_var) * (x - mu)**2.

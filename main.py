@@ -10,6 +10,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser('')
 
     # general
@@ -68,6 +69,12 @@ if __name__ == '__main__':
     total_num_vals = 0
     for var in var_info.keys():
         total_num_vals += var_info[var]['num_vals']
+
+    # training, evaluating and plotting results for baseline. 
+    baseline = Baseline(var_info, train_loader, test_loader)
+    baseline.train()
+    baseline.evaluate()
+    baseline.plot_results(plotting = True)
 
     M = 256  # the number of neurons in scale (s) and translation (t) nets, i.e. hidden dimension in decoder/encoder
 
