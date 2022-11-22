@@ -37,6 +37,7 @@ def load_dataset(dataset_name, batch_size, shuffle, seed):
     val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max - train_min)
     test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max - train_min)
 
+
     # create a data class with __getitem__, i.e. iterable
     train_data = iterate_data(train_data)
     val_data = iterate_data(val_data)
@@ -87,14 +88,12 @@ def dataset_info_restructure(dataset_name, data):
 
     for idx, variable_name in enumerate(list(data.columns)):
         if inv_var_dtype[idx] == 'categorical':
-
            new_columns = pd.get_dummies(data[variable_name])
            new_columns_names = list(new_columns.columns)
            data[new_columns_names] = new_columns
            num_unique = len(new_columns_names) # num unique values
            # dropping original dataframe
            data.drop(columns=variable_name, inplace=True)
-
            var_info[idx] = {'name': variable_name, 'dtype': 'categorical', 'num_vals': num_unique}
 
         else:
