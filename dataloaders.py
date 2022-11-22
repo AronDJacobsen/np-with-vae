@@ -5,6 +5,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import numpy as np
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelBinarizer
 
 def load_dataset(dataset_name, batch_size, shuffle, seed):
 
@@ -15,32 +16,26 @@ def load_dataset(dataset_name, batch_size, shuffle, seed):
     # TODO: pre-process this instead?
     if dataset_name == 'avocado':
         data = data.drop(columns=['Unnamed: 0'])
+        data = data.drop(columns=['Date'])
 
-    var_info = dataset_info(dataset_name, data)
-
-
-    # SPLITTING DATA
-    # split to get test data
-    #N_train = int(len(data) * 0.8)
-    #N_test = len(data) - N_train
-    #train_data, test_data = random_split(data, [N_train, N_test], generator=torch.Generator().manual_seed(seed))
-    # new train data instance for validation split
-    #train_data = data.iloc[train_data.indices]
-    #N_train = int(len(train_data) * 0.8)
-    #N_val = len(train_data) - N_train
-    #train_data, test_data = random_split(train_data, [N_train, N_val], generator=torch.Generator().manual_seed(seed))
-
+    columns = list(data.columns)
+    # getting information about each variable and restructuring categorical to numbers
+    data, var_info, var_dtype = dataset_info_restructure(dataset_name, data)
+    # splitting data
+    # TODO: hparam test size
     train_data, test_data = train_test_split(data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
     # again, split to get val data (on train data)
     train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
 
-    # normalize training data (similar to Ma et al.)
-    #    - then use sigmoid activation function
-    train_min = train_data.min()
-    train_max = train_data.max()
-    train_data = (train_data - train_min) / (train_max - train_min)
-    val_data = (val_data - train_min) / (train_max - train_min)
-    test_data = (test_data - train_min) / (train_max - train_min)
+    # normalize training data (similar to Ma et al.), however only the numerical columns
+    #    - TODO: then use sigmoid activation function?
+    #    - TODO: not normalizing categorical values
+    numeric_columns = [columns[idx] for idx in var_dtype['numeric']]
+    train_min = train_data[numeric_columns].min()
+    train_max = train_data[numeric_columns].max()
+    train_data[numeric_columns] = (train_data[numeric_columns] - train_min) / (train_max - train_min)
+    val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max - train_min)
+    test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max - train_min)
 
     # create a data class with __getitem__, i.e. iterable
     train_data = iterate_data(train_data)
@@ -52,17 +47,20 @@ def load_dataset(dataset_name, batch_size, shuffle, seed):
     val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, drop_last=True)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, drop_last=True)
 
-    return (var_info, (train_loader, val_loader, test_loader))
+    return ((var_info, var_dtype), (train_loader, val_loader, test_loader))
 
 
-def dataset_info(dataset_name, data):
+def dataset_info_restructure(dataset_name, data):
 
     boston_dtype = {'numeric': [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
                     'categorical': [3]}
 
     # TODO: index start with 1?
-    avocado_dtype = {'numeric': [1, 2, 3, 4, 5, 6, 7, 8, 9],
-                     'categorical': [10, 11]}
+    #avocado_dtype = {'numeric': [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    #                 'categorical': [10, 11]}
+
+    avocado_dtype = {'numeric': [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                     'categorical': [9, 10, 11]}
 
     energy_dtypes = {'numeric': [0, 1, 2, 3, 4, 8, 9],
                      'categorical': [5, 6, 7]}
@@ -70,7 +68,7 @@ def dataset_info(dataset_name, data):
     bank_dtypes = {'numeric': [0, 5, 9, 11, 12, 13, 14],
                    'categorical': [1, 2, 3, 4, 6, 7, 8, 10, 15, 16]}
 
-
+    # what dataset and then the variables
     dataset_info_container = {
         'boston': boston_dtype,
         'avocado': avocado_dtype,
@@ -89,16 +87,22 @@ def dataset_info(dataset_name, data):
 
     for idx, variable_name in enumerate(list(data.columns)):
         if inv_var_dtype[idx] == 'categorical':
-           unique = len(pd.unique(data[variable_name]))
-           var_info[idx] = {'name': variable_name, 'dtype': 'categorical', 'num_vals': unique}
+
+           new_columns = pd.get_dummies(data[variable_name])
+           new_columns_names = list(new_columns.columns)
+           data[new_columns_names] = new_columns
+           num_unique = len(new_columns_names) # num unique values
+           # dropping original dataframe
+           data.drop(columns=variable_name, inplace=True)
+
+           var_info[idx] = {'name': variable_name, 'dtype': 'categorical', 'num_vals': num_unique}
 
         else:
             # normal distribution:
             var_info[idx] = {'name': variable_name, 'dtype': 'numerical', 'num_vals': 2}
 
 
-
-    return var_info
+    return data, var_info, var_dtype
 
 
 class iterate_data(Dataset):
