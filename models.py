@@ -76,12 +76,12 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, decoder_net, var_info, num_vals=None):
+    def __init__(self, decoder_net, var_info, total_num_vals=None):
         super(Decoder, self).__init__()
 
         self.decoder = decoder_net
         self.var_info = var_info
-        self.num_vals = num_vals # depends on num_classes of each attribute
+        self.total_num_vals = total_num_vals # depends on num_classes of each attribute
         self.distribution = 'gaussian'
 
     def decode(self, z):
@@ -146,7 +146,7 @@ class Decoder(nn.Module):
             m = prob_d.shape[1] # output dimension
             # below is unnecessary because already performed in self.decode()
             #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-            p = prob_d.view(-1, self.num_vals) # merging batch and output dims (lists of possible outputs)
+            p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
             # we want one sample per number of possible values (e.g. pixel values)
             x_new = torch.multinomial(p, num_samples=1).view(b, m) # new view is (batch, output dims, 1)
 
@@ -155,7 +155,7 @@ class Decoder(nn.Module):
             m = prob_d.shape[1] # output dimension
             # below is unnecessary because already performed in self.decode()
             #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-            p = prob_d.view(-1, self.num_vals) # merging batch and output dims (lists of possible outputs)
+            p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
             # we want one sample per number of possible values (e.g. pixel values)
             x_new = torch.normal(p).view(b, m)
         elif self.distribution == 'bernoulli':
@@ -171,21 +171,20 @@ class Decoder(nn.Module):
         # calculating the log−probability which is later used for ELBO
         prob_d = self.decode(z) # probability output
         log_p = torch.zeros((len(prob_d), len(self.var_info)))
-        idx = 0
-        for var in self.var_info:
+        prob_d_idx = 0
+        for x_idx, var in enumerate(self.var_info):
             if self.var_info[var]['dtype'] == 'categorical':
                 num_vals = self.var_info[var]['num_vals']
-                log_p[:, var] = log_categorical(x[:, idx:idx+1], prob_d[:, idx:idx+num_vals], num_classes=num_vals, reduction='sum', dim=-1).sum(-1)
-                idx += num_vals
+                log_p[:, var] = log_categorical(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], num_classes=num_vals, reduction='sum', dim=-1).sum(-1)
+                prob_d_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'numerical': # Gaussian
                 num_vals = self.var_info[var]['num_vals']
                 # don't know if reduction is correct
-                log_var = torch.log(torch.var(prob_d[:, idx:idx+num_vals], dim=0))
+                log_var = torch.log(torch.var(prob_d[:, prob_d_idx:prob_d_idx+num_vals], dim=0))
                 # log_var = torch.log(prob_d)
-                log_p[:, var] = log_normal_diag(x[:, idx:idx+1], prob_d[:, idx:idx+num_vals], log_var, reduction='sum', dim=-1).sum(-1)
-
-                idx += num_vals
+                log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], log_var, reduction='sum', dim=-1).sum(-1)
+                prob_d_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'bernoulli':
                 log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
@@ -193,7 +192,7 @@ class Decoder(nn.Module):
             else:
                 raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
 
-        return log_p
+        return log_p.sum(axis=1) # summing all log_probs
 
     def forward(self, z, x=None, type='log_prob'):
         assert type in ['decoder', 'log_prob'], 'Type could be either decode or log_prob'
@@ -217,14 +216,14 @@ class Prior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, encoder_net, decoder_net, num_vals, L, var_info):
+    def __init__(self, encoder_net, decoder_net, total_num_vals, L, var_info):
         super(VAE, self).__init__()
 
 
         self.encoder = Encoder(encoder_net=encoder_net)
 
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
-        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, num_vals=num_vals)
+        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals)
 
         #self.heads = nn.ModuleList([
         #    HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
@@ -232,7 +231,7 @@ class VAE(nn.Module):
 
         self.prior = Prior(L=L)
 
-        self.num_vals = num_vals
+        self.total_num_vals = total_num_vals
 
         self.var_info = var_info # contains type of likelihood for variables
 
