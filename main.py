@@ -50,8 +50,8 @@ if __name__ == '__main__':
     # TODO: Should batch_size == D? -> only works like so
 
     #training_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
-    #val_loader = DataLoader(val_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
-    #test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=True) # drop_last to drop incomplete batches
+    #val_loader = DataLoader(val_data, batch_size=args.batch_size, shuffle=False, drop_last=True) 
+    #test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=True)
 
     # Loading dataset
     # information about variables and dataset loaders

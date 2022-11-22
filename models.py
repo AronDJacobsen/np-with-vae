@@ -175,7 +175,7 @@ class Decoder(nn.Module):
         for var in self.var_info:
             if self.var_info[var]['dtype'] == 'categorical':
                 num_vals = self.var_info[var]['num_vals']
-                log_p[var] = log_categorical(x[:, idx:idx+1], prob_d[:, idx:idx+num_vals], num_classes=self.num_vals, reduction='sum', dim=-1).sum(-1)
+                log_p[var] = log_categorical(x[:, idx:idx+1], prob_d[:, idx:idx+num_vals], num_classes=num_vals, reduction='sum', dim=-1).sum(-1)
                 idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'numerical': # Gaussian
