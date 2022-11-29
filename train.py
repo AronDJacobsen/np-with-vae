@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from utils import evaluation, samples_generated
 
-def training(name, max_patience, num_epochs, model, optimizer, train_loader, val_loader, var_info, natural):
+def training(name, max_patience, num_epochs, model, optimizer, train_loader, val_loader, var_info, natural, device):
     nll_val = []
     best_nll = 1000.
     patience = 0
@@ -17,6 +17,8 @@ def training(name, max_patience, num_epochs, model, optimizer, train_loader, val
             if hasattr(model, 'dequantization'):
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
+            batch = batch.to(device)
+
 
             # batch[0] -> numerical data
             # batch[1] -> categorical data
@@ -39,7 +41,7 @@ def training(name, max_patience, num_epochs, model, optimizer, train_loader, val
             optimizer.step()
 
         # Validation
-        loss_val = evaluation(val_loader, var_info, model_best=model, epoch=e,natural=natural)
+        loss_val = evaluation(val_loader, var_info, model_best=model, epoch=e,natural=natural,device=device)
         nll_val.append(loss_val)  # save for plotting
 
         if e == 0:

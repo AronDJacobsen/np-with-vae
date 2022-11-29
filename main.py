@@ -15,12 +15,12 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'])
+    parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
 
     # model parameters
     parser.add_argument('--lr', help='Starting learning rate',default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
-    parser.add_argument('--natural', type=str, default='True', choices=['False', 'True'])
+    parser.add_argument('--natural', dest='natural', action='store_true')
 
     parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=500, type=int)
     parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=4, type=int)
@@ -42,13 +42,21 @@ if __name__ == '__main__':
         os.mkdir(result_dir)
     name = 'vae'
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Running {}".format(device))
+
+    if device == 'cpu':
+        pin_memory = False
+    else:
+        pin_memory = True
+
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
 
     # Loading dataset
     # information about variables and dataset loaders
-    output = load_dataset(dataset_name=args.dataset, batch_size=args.batch_size, shuffle=True, seed=args.seed)
+    output = load_dataset(dataset_name=args.dataset, batch_size=args.batch_size, shuffle=True, seed=args.seed, pin_memory=pin_memory)
     # extracting output
     info, loaders = output
     (var_info, var_dtype) = info
@@ -81,15 +89,15 @@ if __name__ == '__main__':
 
 
     prior = torch.distributions.MultivariateNormal(torch.zeros(L), torch.eye(L))
-    model = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M,natural=args.natural)
-
+    model = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M,natural=args.natural, device=device)
+    model = model.to(device)
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
 
     # Training procedure
     nll_val = training(name=logger.dir, max_patience=args.max_patience, num_epochs=args.max_epochs, model=model,
                        optimizer=optimizer,
-                       train_loader=train_loader, val_loader=val_loader,var_info=var_info,natural=args.natural)
+                       train_loader=train_loader, val_loader=val_loader,var_info=var_info,natural=args.natural, device=device)
 
     print(nll_val)
 

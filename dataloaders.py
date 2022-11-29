@@ -7,7 +7,7 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
-def load_dataset(dataset_name, batch_size, shuffle, seed):
+def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
 
 
     # TODO: sep=';'??
@@ -44,9 +44,9 @@ def load_dataset(dataset_name, batch_size, shuffle, seed):
     test_data = iterate_data(test_data)
 
 
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False, drop_last=True)
-    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, drop_last=True)
-    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, drop_last=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False, drop_last=True, pin_memory=pin_memory)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, drop_last=True, pin_memory=pin_memory)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, drop_last=True, pin_memory=pin_memory)
 
     return ((var_info, var_dtype), (train_loader, val_loader, test_loader))
 

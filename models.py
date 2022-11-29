@@ -86,13 +86,14 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, decoder_net, var_info, total_num_vals=None, natural=True):
+    def __init__(self, decoder_net, var_info, total_num_vals=None, natural=True, device=None):
         super(Decoder, self).__init__()
 
         self.decoder = decoder_net
         self.var_info = var_info
         self.total_num_vals = total_num_vals # depends on num_classes of each attribute
         self.natural = natural
+        self.device = device
         # self.distribution = 'gaussian'
 
     def decode(self, z):
@@ -184,6 +185,7 @@ class Decoder(nn.Module):
     def log_prob(self, x, z):
         # calculating the log−probability which is later used for ELBO
         prob_d = self.decode(z) # probability output
+        prob_d = prob_d.to(self.device)
         log_p = torch.zeros((len(prob_d), len(self.var_info)))
         prob_d_idx = 0
         for x_idx, var in enumerate(self.var_info):
@@ -202,17 +204,18 @@ class Decoder(nn.Module):
                 num_vals = self.var_info[var]['num_vals']
 
                 if self.natural:
-                    natural = to_natural(prob_d[:, prob_d_idx:prob_d_idx+num_vals])
-                    log_var = torch.log(torch.var(natural, dim=0))
+                    natural_param = to_natural(prob_d[:, prob_d_idx:prob_d_idx+num_vals])
+                    log_var = natural_param[:,1]
                     # log_var = torch.log(prob_d)
-                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx + 1], natural,
+                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx + 1], natural_param[:,0],
                                                     log_var, reduction='sum', dim=-1).sum(-1)
                     prob_d_idx += num_vals
                 else:
                     # don't know if reduction is correct
-                    log_var = torch.log(torch.var(prob_d[:, prob_d_idx:prob_d_idx+num_vals], dim=0))
+                    log_var = torch.log(prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,1])
+                    mu = prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,0]
                     # log_var = torch.log(prob_d)
-                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], log_var, reduction='sum', dim=-1).sum(-1)
+                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], mu, log_var, reduction='sum', dim=-1).sum(-1)
                     prob_d_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'bernoulli':
@@ -221,7 +224,7 @@ class Decoder(nn.Module):
             else:
                 raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
 
-        return log_p.sum(axis=1) # summing all log_probs
+        return log_p.sum(axis=1).to(self.device) # summing all log_probs
 
     def forward(self, z, x=None, type='log_prob'):
         assert type in ['decoder', 'log_prob'], 'Type could be either decode or log_prob'
@@ -245,7 +248,7 @@ class Prior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info,D,M,natural):
+    def __init__(self, total_num_vals, L, var_info,D,M,natural, device):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -255,10 +258,14 @@ class VAE(nn.Module):
         decoder_net = nn.Sequential(nn.Linear(L, M), nn.LeakyReLU(),
                             nn.Linear(M, M), nn.LeakyReLU(),
                             nn.Linear(M, total_num_vals))
+
+        encoder_net.to(device)
+        decoder_net.to(device)
+
         self.encoder = Encoder(encoder_net=encoder_net)
 
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
-        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,natural=natural)
+        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,natural=natural, device=device)
 
         #self.heads = nn.ModuleList([
         #    HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
@@ -270,10 +277,13 @@ class VAE(nn.Module):
 
         self.var_info = var_info # contains type of likelihood for variables
 
+        self.device = device
+
     def forward(self, x, reduction='avg'):
         # encoder
         mu_e, log_var_e = self.encoder.encode(x)
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
+        z = z.to(self.device)
 
         #x_params = [head(y_shared, s_samples) for head in self.heads]
 
