@@ -13,6 +13,16 @@ from pytorch_model_summary import summary
 # importing distributions
 import torch.distributions as dists
 
+
+def to_natural(prob_d):
+    mu = prob_d[:,0]
+    sigma = prob_d[:,1]
+
+    eta2 = -0.5 / sigma ** 2
+    eta1 = -2 * mu * eta2
+
+    return torch.stack((eta1,eta2),dim=1)
+
 # initialized within VAE class 
 class Encoder(nn.Module):
     def __init__(self, encoder_net):
@@ -76,12 +86,13 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, decoder_net, var_info, total_num_vals=None):
+    def __init__(self, decoder_net, var_info, total_num_vals=None, natural=True):
         super(Decoder, self).__init__()
 
         self.decoder = decoder_net
         self.var_info = var_info
         self.total_num_vals = total_num_vals # depends on num_classes of each attribute
+        self.natural = natural
         # self.distribution = 'gaussian'
 
     def decode(self, z):
@@ -178,16 +189,31 @@ class Decoder(nn.Module):
         for x_idx, var in enumerate(self.var_info):
             if self.var_info[var]['dtype'] == 'categorical':
                 num_vals = self.var_info[var]['num_vals']
-                log_p[:, var] = log_categorical(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], num_classes=num_vals, reduction='sum', dim=-1).sum(-1)
-                prob_d_idx += num_vals
+
+                if self.natural:
+                    log_p[:, var] = log_categorical(x[:, x_idx:x_idx + 1], prob_d[:, prob_d_idx:prob_d_idx + num_vals],
+                                                num_classes=num_vals, reduction='sum', dim=-1).sum(-1)
+                    prob_d_idx += num_vals
+                else:
+                    log_p[:, var] = categorical(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], num_classes=num_vals, reduction='sum', dim=-1).sum(-1)
+                    prob_d_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'numerical': # Gaussian
                 num_vals = self.var_info[var]['num_vals']
-                # don't know if reduction is correct
-                log_var = torch.log(torch.var(prob_d[:, prob_d_idx:prob_d_idx+num_vals], dim=0))
-                # log_var = torch.log(prob_d)
-                log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], log_var, reduction='sum', dim=-1).sum(-1)
-                prob_d_idx += num_vals
+
+                if self.natural:
+                    natural = to_natural(prob_d[:, prob_d_idx:prob_d_idx+num_vals])
+                    log_var = torch.log(torch.var(natural, dim=0))
+                    # log_var = torch.log(prob_d)
+                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx + 1], natural,
+                                                    log_var, reduction='sum', dim=-1).sum(-1)
+                    prob_d_idx += num_vals
+                else:
+                    # don't know if reduction is correct
+                    log_var = torch.log(torch.var(prob_d[:, prob_d_idx:prob_d_idx+num_vals], dim=0))
+                    # log_var = torch.log(prob_d)
+                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], prob_d[:, prob_d_idx:prob_d_idx+num_vals], log_var, reduction='sum', dim=-1).sum(-1)
+                    prob_d_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'bernoulli':
                 log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
