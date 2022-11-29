@@ -20,9 +20,10 @@ if __name__ == '__main__':
     # model parameters
     parser.add_argument('--lr', help='Starting learning rate',default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
+    parser.add_argument('--natural', type=str, default='True', choices=['False', 'True'])
 
     parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=500, type=int)
-    parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=500, type=int)
+    parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=4, type=int)
 
     # tensorboard
     parser.add_argument('--log_dir', help='Store logs in this directory during training.',
@@ -68,10 +69,11 @@ if __name__ == '__main__':
             D += 1
 
     # training, evaluating and plotting results for baseline. 
-    baseline = Baseline(var_info, train_loader, test_loader)
-    baseline.train()
-    baseline.evaluate()
-    baseline.plot_results(plotting = True)
+    print('Running Baseline')
+    # baseline = Baseline(var_info, train_loader, test_loader)
+    # baseline.train()
+    # baseline.evaluate()
+    # baseline.plot_results(plotting = True)
 
 
     # TODO: make hparam
@@ -84,7 +86,7 @@ if __name__ == '__main__':
 
 
     prior = torch.distributions.MultivariateNormal(torch.zeros(L), torch.eye(L))
-    model = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M)
+    model = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M,natural=args.natural)
 
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)

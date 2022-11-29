@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+# most code here from
+# https://github.com/adrianjav/heterogeneous_vaes
 from functools import reduce
 from typing import Iterable
 
@@ -9,6 +10,11 @@ from torch.distributions import constraints
 from torch.distributions.utils import probs_to_logits, logits_to_probs
 
 # from .miscelanea import to_one_hot
+def to_one_hot(x, size):
+    x_one_hot = x.new_zeros(x.size(0), size)
+    x_one_hot.scatter_(1, x.unsqueeze(-1).long(), 1).float()
+
+    return x_one_hot
 
 
 class Base(object):

@@ -13,7 +13,7 @@ def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=
             total_num_vals += var_info[var]['num_vals']
         model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M)
         # load best performing model
-        model_best.load_state_dict(torch.load('results/'+name+'.model'))
+        model_best.load_state_dict(torch.load(name+'.model'))
 
     model_best.eval()
     loss = 0.

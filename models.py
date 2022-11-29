@@ -219,7 +219,7 @@ class Prior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info,D,M):
+    def __init__(self, total_num_vals, L, var_info,D,M,natural):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -232,7 +232,7 @@ class VAE(nn.Module):
         self.encoder = Encoder(encoder_net=encoder_net)
 
         #TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
-        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals)
+        self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,natural=natural)
 
         #self.heads = nn.ModuleList([
         #    HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
