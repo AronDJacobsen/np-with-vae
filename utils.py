@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 from models import VAE
 
-def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=256):
+def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False):
     # EVALUATION
     if model_best is None:
         D = len(var_info.keys())
@@ -11,7 +11,7 @@ def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=
         total_num_vals = 0
         for var in var_info.keys():
             total_num_vals += var_info[var]['num_vals']
-        model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M)
+        model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M, natural=natural)
         # load best performing model
         model_best.load_state_dict(torch.load(name+'.model'))
 

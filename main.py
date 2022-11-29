@@ -69,7 +69,7 @@ if __name__ == '__main__':
             D += 1
 
     # training, evaluating and plotting results for baseline. 
-    print('Running Baseline')
+    # print('Running Baseline')
     # baseline = Baseline(var_info, train_loader, test_loader)
     # baseline.train()
     # baseline.evaluate()
@@ -78,11 +78,6 @@ if __name__ == '__main__':
 
     # TODO: make hparam
     M = 256  # the number of neurons in scale (s) and translation (t) nets, i.e. hidden dimension in decoder/encoder
-
-
-    # TODO: do this in the model
-    # creating encoder and decoder network
-    
 
 
     prior = torch.distributions.MultivariateNormal(torch.zeros(L), torch.eye(L))
@@ -94,7 +89,7 @@ if __name__ == '__main__':
     # Training procedure
     nll_val = training(name=logger.dir, max_patience=args.max_patience, num_epochs=args.max_epochs, model=model,
                        optimizer=optimizer,
-                       train_loader=train_loader, val_loader=val_loader,var_info=var_info)
+                       train_loader=train_loader, val_loader=val_loader,var_info=var_info,natural=args.natural)
 
     print(nll_val)
 

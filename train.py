@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from utils import evaluation, samples_generated
 
-def training(name, max_patience, num_epochs, model, optimizer, train_loader, val_loader, var_info):
+def training(name, max_patience, num_epochs, model, optimizer, train_loader, val_loader, var_info, natural):
     nll_val = []
     best_nll = 1000.
     patience = 0
@@ -39,7 +39,7 @@ def training(name, max_patience, num_epochs, model, optimizer, train_loader, val
             optimizer.step()
 
         # Validation
-        loss_val = evaluation(val_loader, var_info, model_best=model, epoch=e)
+        loss_val = evaluation(val_loader, var_info, model_best=model, epoch=e,natural=natural)
         nll_val.append(loss_val)  # save for plotting
 
         if e == 0:
