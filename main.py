@@ -104,7 +104,7 @@ if __name__ == '__main__':
     # todo: what if baseline?
 
     if 'train' in args.mode:
-        nll_val = training(logger=logger.dir, save_path=result_dir, max_patience=args.max_patience,
+        nll_val = training(logger=logger, save_path=result_dir, max_patience=args.max_patience,
                            num_epochs=args.max_epochs,
                            model=model, optimizer=optimizer,
                            train_loader=train_loader, val_loader=val_loader, var_info=var_info, device=device)
