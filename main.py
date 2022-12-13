@@ -23,6 +23,9 @@ if __name__ == '__main__':
     parser.add_argument('--natural', dest='natural', action='store_true')
 
     parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=6, type=int)
+
+    parser.add_argument('--train', dest='is_train', action='store_true')
+
     parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=4, type=int)
 
     # tensorboard
@@ -93,13 +96,15 @@ if __name__ == '__main__':
     model = model.to(device)
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
-
+    print(f'training = {args.is_train}')
     # Training procedure
-    nll_val = training(name=logger.dir, max_patience=args.max_patience, num_epochs=args.max_epochs, model=model,
+    if args.is_train:
+        nll_val = training(name=logger.dir, max_patience=args.max_patience, num_epochs=args.max_epochs, model=model,
                        optimizer=optimizer,
                        train_loader=train_loader, val_loader=val_loader,var_info=var_info,natural=args.natural, device=device)
 
-    print(nll_val)
+        print(nll_val)
+    nll_val = [0]
 
     # Save and plot test_results
     get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader,var_info=var_info, D=D, natural=args.natural, device=device)
