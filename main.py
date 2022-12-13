@@ -22,11 +22,11 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
     parser.add_argument('--natural', dest='natural', action='store_true')
 
+    parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=1000, type=int)
+
     parser.add_argument('--train', dest='is_train', action='store_true')
 
-
-    parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=500, type=int)
-    parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=4, type=int)
+    parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=20, type=int)
 
     # tensorboard
     parser.add_argument('--log_dir', help='Store logs in this directory during training.',
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     nll_val = [0]
 
     # Save and plot test_results
-    get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader,var_info=var_info)
+    get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader,var_info=var_info, D=D, natural=args.natural, device=device)
 
     evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None)
     # ### testing ###
