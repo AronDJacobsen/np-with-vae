@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--mode", "test"]
+            "args": ["--mode", "test", "--experiment", "thinlinc/Results/avocado", "--device", "cpu"]
         }
     ]
 }

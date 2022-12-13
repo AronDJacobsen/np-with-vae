@@ -113,7 +113,7 @@ if __name__ == '__main__':
     if 'test' in args.mode:
         # Save and plot test_results
         # loading best model
-        model = load_model(model_path=result_dir, model=model)
+        model = load_model(model_path=result_dir, model=model, device=device)
         # test_loss = evaluation(model, test_loader, device)
         # todo: extend outputs
         # NLL, MSE, imputation_error = evaluate_to_table(model, test_loader, device)

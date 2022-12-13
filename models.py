@@ -147,16 +147,11 @@ class Decoder(nn.Module):
                 outs = outs.view(outs.shape[0],-1, num_vals) 
                 p = outs.view(-1, num_vals)
 
-                # b = prob_d.shape[0] # batch size
-                # m = prob_d.shape[1] # output dimension
-                # below is unnecessary because already performed in self.decode()
-                #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-                # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
-                # we want one sample per number of possible values (e.g. pixel values)
                 x_batch = torch.multinomial(p, num_samples=1) # .view(b, m) # new view is (batch, output dims, 1)
+
                 # one hot encoding x_batch:
                 x_batch = F.one_hot(x_batch.flatten(), num_classes = num_vals)
-
+                
                 x_reconstructed[:, recon_idx:recon_idx+num_vals] = x_batch
 
                 # Updating indices
@@ -290,6 +285,7 @@ class VAE(nn.Module):
         mu_e, log_var_e = self.encoder.encode(x)
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
         z = z.to(self.device)
+        output = self.decoder.sample(z)
 
         #x_params = [head(y_shared, s_samples) for head in self.heads]
 
@@ -308,9 +304,9 @@ class VAE(nn.Module):
         rmse = -1 # TODO: torch.sqrt(MSE(model_output, x))
 
         if reduction == 'sum':
-            return {'output': z, 'loss': -(RE + KL).sum(), 'NLL': nll, 'RMSE': rmse}
+            return {'output': output, 'loss': -(RE + KL).sum(), 'NLL': nll, 'RMSE': rmse}
         else:
-            return {'output': z, 'loss': -(RE + KL).mean(), 'NLL': nll, 'RMSE': rmse}
+            return {'output': output, 'loss': -(RE + KL).mean(), 'NLL': nll, 'RMSE': rmse}
     
     def nLLloss(self, x, y_true):
         mu_e, log_var_e = self.encoder.encode(x)
