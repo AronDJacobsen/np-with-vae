@@ -99,6 +99,10 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
     # print(f'training = {args.is_train}')
     # Training procedure
+
+    #assert args.model == 'BASELINE' and 'train' in args.mode, 'baseline model can only test'
+    # todo: what if baseline?
+
     if 'train' in args.mode:
         nll_val = training(logger=logger, save_path=result_dir, max_patience=args.max_patience,
                            num_epochs=args.max_epochs,

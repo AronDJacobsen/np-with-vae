@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from models import VAE
+from models import *
 
 
 def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device):
@@ -9,7 +9,8 @@ def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device):
     if model_name == 'VAE':
         return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device)
     elif model_name == 'BASELINE':
-        return 'implement baseline here'
+        # todo make it train and able to evaluate like the other
+        return Baseline()
     else:
         raise NotImplementedError("Specified model is currently not implemented.")
 
