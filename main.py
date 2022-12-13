@@ -22,11 +22,11 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
     parser.add_argument('--natural', dest='natural', action='store_true')
 
-    parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=6, type=int)
+    parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=1000, type=int)
 
     parser.add_argument('--train', dest='is_train', action='store_true')
 
-    parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=4, type=int)
+    parser.add_argument('--max_patience', help='"If training does not improve for longer than --max_patience epochs, it is stopped"', default=20, type=int)
 
     # tensorboard
     parser.add_argument('--log_dir', help='Store logs in this directory during training.',
