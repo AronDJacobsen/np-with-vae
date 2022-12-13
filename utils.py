@@ -220,8 +220,13 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
         # with torch no grad
         batch_idx = 0
         z = model.forward(imputed_test_batch)['output']
+        reconstructed_test_batch = model.decoder.sample(z)
 
-        model.decoder.sample(z)
+        # The following is the reconstructed values of the imputed scores: 
+        # reconstructed_test_batch[imputation_mask == 0]
+
+        # Actual imputed values
+        test_batch[imputation_mask == 0]
 
         #output = model_best.forward(imputed_test_batch, reduction='avg')['output']
         #loss = loss + loss_t.item()

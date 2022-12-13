@@ -163,7 +163,6 @@ class Decoder(nn.Module):
                 recon_idx += num_vals
                 output_idx += num_vals
 
-
             elif self.var_info[var]['dtype'] == 'numerical':
                 # b = prob_d.shape[0] # batch size
                 # m = prob_d.shape[1] # output dimension
