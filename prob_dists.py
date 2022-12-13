@@ -51,6 +51,7 @@ def log_normal_diag(x, mu, log_var, reduction=None, dim=None):
 
 
 def log_standard_normal(x, reduction=None, dim=None):
+    # expect mean=0 and sigma=1
     D = x.shape[1]
     log_p = -0.5 * D * torch.log(2. * PI) - 0.5 * x**2.
     if reduction == 'avg':

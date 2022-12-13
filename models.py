@@ -104,21 +104,29 @@ class Decoder(nn.Module):
         prob_d = torch.zeros(h_d.shape)
         # hidden output of decoder
         idx = 0
-        #
-        for var in self.var_info:
-            if self.var_info[var]['dtype'] == 'categorical':
-                num_vals = self.var_info[var]['num_vals']
-                prob_d[:, idx:idx+num_vals] = torch.softmax(h_d[:, idx:idx + num_vals], axis=1)
-                idx += num_vals
+        if self.natural == False:
+            # finding probability of
+            for var in self.var_info:
+                if self.var_info[var]['dtype'] == 'categorical':
+                    num_vals = self.var_info[var]['num_vals']
+                    prob_d[:, idx:idx+num_vals] = torch.softmax(h_d[:, idx:idx + num_vals], axis=1)
+                    idx += num_vals
+                elif self.var_info[var]['dtype'] == 'numerical':
+                    # TODO: apply sigmoid activate? since data is normalized [0,1] then mu and sigma can't exceed 0 and 1?
+                    # gaussian always outputs two values
+                    num_vals = 2
+                    # normal distribution, mu and sigma returned
+                    prob_d[:,idx:idx+num_vals] = h_d[:, idx:idx+num_vals] #torch.sigmoid(h_d[:, idx:idx+num_vals])
+                    idx += num_vals
+                else:
+                    raise ValueError('Either `categorical` or `gaussian`')
 
-            elif self.var_info[var]['dtype'] == 'numerical':
-                # TODO: apply sigmoid activate? since data is normalized [0,1] then mu and sigma can't exceed 0 and 1?
-                # gaussian always outputs two values
-                num_vals = 2
-                prob_d[:,idx:idx+num_vals] = torch.sigmoid(h_d[:, idx:idx+num_vals])
-                idx += num_vals
-            else:
-                raise ValueError('Either `categorical` or `gaussian`')
+        # using naturals
+        else:
+            a=0
+
+
+
 
         '''
         if self.distribution == 'categorical':
@@ -212,9 +220,10 @@ class Decoder(nn.Module):
                     prob_d_idx += num_vals
                 else:
                     # don't know if reduction is correct
-                    log_var = torch.log(prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,1])
-                    mu = prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,0]
+                    #log_var = torch.log(prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,1])
+                    #mu = prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,0]
                     # log_var = torch.log(prob_d)
+                    mu, log_var = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx+num_vals], 2, dim=1)
                     log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], mu, log_var, reduction='sum', dim=-1).sum(-1)
                     prob_d_idx += num_vals
 
@@ -248,7 +257,7 @@ class Prior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info,D,M,natural, device):
+    def __init__(self, total_num_vals, L, var_info, D, M, natural, device):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -293,10 +302,34 @@ class VAE(nn.Module):
         # Kullback–Leibler divergence, regularizer
         KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
         # loss
+        
         if reduction == 'sum':
             return -(RE + KL).sum()
         else:
             return -(RE + KL).mean()
+    
+    def nLLloss(self, x, y_true):
+        mu_e, log_var_e = self.encoder.encode(x)
+        z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
+        z = z.to(self.device)
+        RE = self.decoder.log_prob(x, z)
+        y_pred = RE
+        loss = nn.NLLLoss()
+        nllloss = loss(y_pred, y_true)
+        return nllloss
+
+    def mseloss(self, x, y_true):
+        mu_e, log_var_e = self.encoder.encode(x)
+        z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
+        z = z.to(self.device)
+        RE = self.decoder.log_prob(x, z)
+        y_pred = RE
+        loss = nn.MSELoss()
+        nllloss = loss(y_pred, y_true)
+        return nllloss
+        
+    def imputation_error(self, x, y_true):
+        return self.nLLloss(x, y_true)
 
     def sample(self, batch_size=64):
         z = self.prior.sample(batch_size=batch_size)
