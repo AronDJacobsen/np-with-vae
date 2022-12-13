@@ -293,10 +293,34 @@ class VAE(nn.Module):
         # Kullback–Leibler divergence, regularizer
         KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
         # loss
+        
         if reduction == 'sum':
             return -(RE + KL).sum()
         else:
             return -(RE + KL).mean()
+    
+    def nLLloss(self, x, y_true):
+        mu_e, log_var_e = self.encoder.encode(x)
+        z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
+        z = z.to(self.device)
+        RE = self.decoder.log_prob(x, z)
+        y_pred = RE
+        loss = nn.NLLLoss()
+        nllloss = loss(y_pred, y_true)
+        return nllloss
+
+    def mseloss(self, x, y_true):
+        mu_e, log_var_e = self.encoder.encode(x)
+        z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
+        z = z.to(self.device)
+        RE = self.decoder.log_prob(x, z)
+        y_pred = RE
+        loss = nn.MSELoss()
+        nllloss = loss(y_pred, y_true)
+        return nllloss
+        
+    def imputation_error(self, x, y_true):
+        return self.nLLloss(x, y_true)
 
     def sample(self, batch_size=64):
         z = self.prior.sample(batch_size=batch_size)
