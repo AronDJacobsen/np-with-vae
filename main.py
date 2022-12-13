@@ -116,9 +116,8 @@ if __name__ == '__main__':
         model = load_model(model_path=result_dir, model=model)
         # test_loss = evaluation(model, test_loader, device)
         # todo: extend outputs
-        NLL, MSE, imputation_error = evaluate_to_table(model, test_loader, device)
-
-        # get_test_results(model=model, result_path=result_dir, model_name=name, test_loader=test_loader, var_info=var_info, device=device)
+        # NLL, MSE, imputation_error = evaluate_to_table(model, test_loader, device)
+        get_test_results(model=model, result_path=result_dir, model_name=name, test_loader=test_loader, var_info=var_info, device=device)
 
         # evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256, natural=False,
         #                  device=None)

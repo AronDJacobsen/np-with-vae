@@ -298,11 +298,18 @@ class VAE(nn.Module):
         # Kullback–Leibler divergence, regularizer
         KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
         # loss
-        
+
+        # model_output = self.decoder.sample(z)
+
+        NLL = nn.NLLLoss()
+        nll = -1 # TODO: NLL(model_output, x)
+        MSE = nn.MSELoss()
+        rmse = -1 # TODO: torch.sqrt(MSE(model_output, x))
+
         if reduction == 'sum':
-            return -(RE + KL).sum()
+            return {'output': z, 'loss': -(RE + KL).sum(), 'NLL': nll, 'RMSE': rmse}
         else:
-            return -(RE + KL).mean()
+            return {'output': z, 'loss': -(RE + KL).mean(), 'NLL': nll, 'RMSE': rmse}
     
     def nLLloss(self, x, y_true):
         mu_e, log_var_e = self.encoder.encode(x)

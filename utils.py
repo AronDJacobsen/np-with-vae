@@ -56,7 +56,7 @@ def evaluation(model, data_loader, device):
 
         # test_batch = test_batch[1]
         # TODO: this was also implemented in train.training and utils.samples_generated
-        loss_t = model.forward(batch, reduction='sum')
+        loss_t = model.forward(batch, reduction='sum')['loss']
         loss = loss + loss_t.item()
         N = N + batch.shape[0]
     loss = loss / N
@@ -91,7 +91,7 @@ def evaluate_to_table(model, data_loader, device):
     N = 0.
     for indx_batch, batch in enumerate(data_loader):
         batch = batch.to(device)
-        loss_t = model.forward(batch, reduction='sum')
+        loss_t = model.forward(batch, reduction='sum')['loss']
         loss = loss + loss_t.item()
         N = N + batch.shape[0]
     loss = loss / N
@@ -176,3 +176,52 @@ def get_test_results(model, result_path, model_name, test_loader, var_info, devi
     # samples_real(result_path, test_loader)
 
     plot_curve(result_path) #, nll_val)
+
+    imputation_error = imputation_score(test_loader, var_info, model, name=result_path, device=device, imputation_ratio=0.5)
+
+def imputation_score(test_loader, var_info, model, name=None, device=None, imputation_ratio = 0.5):
+
+    model.eval()
+    loss = 0.
+    N = 0.
+
+    for indx_batch, test_batch in enumerate(test_loader):
+        imputation_mask = np.ones(test_batch.shape)
+        for i, observation in enumerate(test_batch):
+
+            # Random draw of variables to set zero - based on imputation ratio
+            imputation_variables = np.random.choice(list(var_info.keys()), size = int(len(var_info)*imputation_ratio), replace=False)
+            imp_idx = 0 # total number of variables in data
+            for var in range(len(list(var_info.keys()))):
+                # Get indeces to impute
+                if var_info[var]['dtype'] == 'categorical':
+                    idx1 = imp_idx
+                    imp_idx += var_info[var]['num_vals']
+                    idx2 = imp_idx
+                else:
+                    idx1 = imp_idx
+                    imp_idx += 1
+                    idx2 = imp_idx
+
+                if var in imputation_variables:
+                    # Put into mask
+                    imputation_mask[i,:][idx1:idx2] = 0
+
+        imputed_test_batch = (test_batch * imputation_mask)
+
+        #for var in imputation_variables:
+            # OBS der skal også gemmes hvilke elementer der blev sat til 0, så de senere kan sammenlignes
+
+        #    idx_range = (sum([var_info[i]['num_vals'] for i in range(var)]), var_info[var]['num_vals'])
+        #    test_batch[observation,:][idx_range[0]:idx_range[0]+idx_range[1]]
+
+        imputed_test_batch = imputed_test_batch.to(device)
+
+        # with torch no grad
+        #a = model(imputed_test_batch)
+        #output = model_best.forward(imputed_test_batch, reduction='avg')['output']
+        #loss = loss + loss_t.item()
+        #N = N + test_batch.shape[0]
+    #loss = loss / N    
+    return None
+    

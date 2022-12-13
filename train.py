@@ -33,7 +33,7 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
             #batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head
             # batch = batch[0] 
             # model returns the loss in forward
-            loss = model.forward(batch)
+            loss = model.forward(batch)['loss']
             # TODO: this was also implemented in utils.evaluation and utils.samples_generated
 
             optimizer.zero_grad()
