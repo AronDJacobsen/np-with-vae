@@ -1,0 +1,971 @@
+Logs from runs/Dec13_14-16-00_n-62-20-10_VAE
+main.py --seed 3407 --device cuda --batch 16 --write --mode train --experiment boston --dataset boston
+
+Validation at 0: {'NLL': 344.7601826985677}
+saved!
+Validation at 1: {'NLL': 301.968017578125}
+saved!
+Validation at 2: {'NLL': 259.95545450846356}
+saved!
+Validation at 3: {'NLL': 222.19651794433594}
+saved!
+Validation at 4: {'NLL': 191.10172526041666}
+saved!
+Validation at 5: {'NLL': 171.54119364420572}
+saved!
+Validation at 6: {'NLL': 168.97736612955728}
+saved!
+Validation at 7: {'NLL': 176.97086079915366}
+Validation at 8: {'NLL': 162.31879679361978}
+saved!
+Validation at 9: {'NLL': 162.78073120117188}
+Validation at 10: {'NLL': 162.58560689290366}
+Validation at 11: {'NLL': 160.2508799235026}
+saved!
+Validation at 12: {'NLL': 159.8925984700521}
+saved!
+Validation at 13: {'NLL': 164.93848673502603}
+Validation at 14: {'NLL': 162.90596516927084}
+Validation at 15: {'NLL': 157.8956044514974}
+saved!
+Validation at 16: {'NLL': 145.00543212890625}
+saved!
+Validation at 17: {'NLL': 149.82316080729166}
+Validation at 18: {'NLL': 147.32530212402344}
+Validation at 19: {'NLL': 155.14715067545572}
+Validation at 20: {'NLL': 143.5756632486979}
+saved!
+Validation at 21: {'NLL': 157.49499003092447}
+Validation at 22: {'NLL': 139.2814737955729}
+saved!
+Validation at 23: {'NLL': 138.14095052083334}
+saved!
+Validation at 24: {'NLL': 126.78264872233073}
+saved!
+Validation at 25: {'NLL': 126.09930419921875}
+saved!
+Validation at 26: {'NLL': 133.82650248209634}
+Validation at 27: {'NLL': 128.70584106445312}
+Validation at 28: {'NLL': 127.03812917073567}
+Validation at 29: {'NLL': 118.81722768147786}
+saved!
+Validation at 30: {'NLL': 122.23658752441406}
+Validation at 31: {'NLL': 131.0271250406901}
+Validation at 32: {'NLL': 113.79134877522786}
+saved!
+Validation at 33: {'NLL': 110.62921651204427}
+saved!
+Validation at 34: {'NLL': 118.16314442952473}
+Validation at 35: {'NLL': 113.32960001627605}
+Validation at 36: {'NLL': 104.91966756184895}
+saved!
+Validation at 37: {'NLL': 117.22615305582683}
+Validation at 38: {'NLL': 106.52367909749348}
+Validation at 39: {'NLL': 114.26931254069011}
+Validation at 40: {'NLL': 97.65559641520183}
+saved!
+Validation at 41: {'NLL': 103.33597056070964}
+Validation at 42: {'NLL': 100.40477244059245}
+Validation at 43: {'NLL': 98.13993835449219}
+Validation at 44: {'NLL': 98.40784200032552}
+Validation at 45: {'NLL': 84.41563924153645}
+saved!
+Validation at 46: {'NLL': 96.4639383951823}
+Validation at 47: {'NLL': 93.94275665283203}
+Validation at 48: {'NLL': 83.9976806640625}
+saved!
+Validation at 49: {'NLL': 79.30465698242188}
+saved!
+Validation at 50: {'NLL': 86.4508794148763}
+Validation at 51: {'NLL': 77.28465525309245}
+saved!
+Validation at 52: {'NLL': 77.77427927652995}
+Validation at 53: {'NLL': 73.74910227457683}
+saved!
+Validation at 54: {'NLL': 65.16063181559245}
+saved!
+Validation at 55: {'NLL': 72.9772440592448}
+Validation at 56: {'NLL': 68.98738606770833}
+Validation at 57: {'NLL': 60.0070546468099}
+saved!
+Validation at 58: {'NLL': 69.71998087565105}
+Validation at 59: {'NLL': 56.97556813557943}
+saved!
+Validation at 60: {'NLL': 48.97326532999674}
+saved!
+Validation at 61: {'NLL': 46.46467272440592}
+saved!
+Validation at 62: {'NLL': 45.45245488484701}
+saved!
+Validation at 63: {'NLL': 47.68121846516927}
+Validation at 64: {'NLL': 40.309488932291664}
+saved!
+Validation at 65: {'NLL': 39.43101247151693}
+saved!
+Validation at 66: {'NLL': 35.7170934677124}
+saved!
+Validation at 67: {'NLL': 38.00794919331869}
+Validation at 68: {'NLL': 40.28081067403158}
+Validation at 69: {'NLL': 29.1102720896403}
+saved!
+Validation at 70: {'NLL': 32.296566009521484}
+Validation at 71: {'NLL': 29.49816672007243}
+Validation at 72: {'NLL': 31.13966464996338}
+Validation at 73: {'NLL': 25.595556259155273}
+saved!
+Validation at 74: {'NLL': 26.509877522786457}
+Validation at 75: {'NLL': 23.227336883544922}
+saved!
+Validation at 76: {'NLL': 21.51211643218994}
+saved!
+Validation at 77: {'NLL': 13.887040774027506}
+saved!
+Validation at 78: {'NLL': 17.93014939626058}
+Validation at 79: {'NLL': 14.783596356709799}
+Validation at 80: {'NLL': 13.980697631835938}
+Validation at 81: {'NLL': 18.701162656148274}
+Validation at 82: {'NLL': 14.4870818456014}
+Validation at 83: {'NLL': 9.496637344360352}
+saved!
+Validation at 84: {'NLL': 9.200985590616861}
+saved!
+Validation at 85: {'NLL': 7.7312577565511065}
+saved!
+Validation at 86: {'NLL': 9.765571594238281}
+Validation at 87: {'NLL': 6.579284032185872}
+saved!
+Validation at 88: {'NLL': 4.298634847005208}
+saved!
+Validation at 89: {'NLL': 5.914127349853516}
+Validation at 90: {'NLL': 6.503465016682942}
+Validation at 91: {'NLL': 3.5056158701578775}
+saved!
+Validation at 92: {'NLL': 7.24746831258138}
+Validation at 93: {'NLL': 0.02604198455810547}
+saved!
+Validation at 94: {'NLL': 0.14667383829752603}
+Validation at 95: {'NLL': 1.7667875289916992}
+Validation at 96: {'NLL': -6.512707074483235}
+saved!
+Validation at 97: {'NLL': -1.0936349232991536}
+Validation at 98: {'NLL': -1.7611939112345378}
+Validation at 99: {'NLL': -6.344396273295085}
+Validation at 100: {'NLL': -6.297251383463542}
+Validation at 101: {'NLL': -13.81377919514974}
+saved!
+Validation at 102: {'NLL': -10.267763137817383}
+Validation at 103: {'NLL': -9.22973378499349}
+Validation at 104: {'NLL': -8.783723513285318}
+Validation at 105: {'NLL': -13.363697052001953}
+Validation at 106: {'NLL': -3.1454826990763345}
+Validation at 107: {'NLL': -9.17894204457601}
+Validation at 108: {'NLL': -14.023868242899576}
+saved!
+Validation at 109: {'NLL': -15.271122614542643}
+saved!
+Validation at 110: {'NLL': -15.246679623921713}
+Validation at 111: {'NLL': -13.772174835205078}
+Validation at 112: {'NLL': -18.34951877593994}
+saved!
+Validation at 113: {'NLL': -18.24228286743164}
+Validation at 114: {'NLL': -23.37828477223714}
+saved!
+Validation at 115: {'NLL': -8.250125249226889}
+Validation at 116: {'NLL': -23.96609401702881}
+saved!
+Validation at 117: {'NLL': -21.207464853922527}
+Validation at 118: {'NLL': -26.975045522054035}
+saved!
+Validation at 119: {'NLL': -24.82619285583496}
+Validation at 120: {'NLL': -19.412879943847656}
+Validation at 121: {'NLL': -29.69931761423747}
+saved!
+Validation at 122: {'NLL': -33.17939885457357}
+saved!
+Validation at 123: {'NLL': -36.2893918355306}
+saved!
+Validation at 124: {'NLL': -13.960575739542643}
+Validation at 125: {'NLL': -37.587050437927246}
+saved!
+Validation at 126: {'NLL': -27.33508014678955}
+Validation at 127: {'NLL': -31.779542287190754}
+Validation at 128: {'NLL': -28.09119160970052}
+Validation at 129: {'NLL': -40.246941566467285}
+saved!
+Validation at 130: {'NLL': -41.39884694417318}
+saved!
+Validation at 131: {'NLL': -43.96929200490316}
+saved!
+Validation at 132: {'NLL': -47.30103143056234}
+saved!
+Validation at 133: {'NLL': -40.15884526570638}
+Validation at 134: {'NLL': -36.10526911417643}
+Validation at 135: {'NLL': -49.104979832967125}
+saved!
+Validation at 136: {'NLL': -53.37677510579427}
+saved!
+Validation at 137: {'NLL': -49.98057619730631}
+Validation at 138: {'NLL': -52.86475912729899}
+Validation at 139: {'NLL': -56.130087534586586}
+saved!
+Validation at 140: {'NLL': -56.15337689717611}
+saved!
+Validation at 141: {'NLL': -52.2151673634847}
+Validation at 142: {'NLL': -55.005846659342446}
+Validation at 143: {'NLL': -60.96083450317383}
+saved!
+Validation at 144: {'NLL': -51.669477462768555}
+Validation at 145: {'NLL': -54.3908748626709}
+Validation at 146: {'NLL': -63.72281265258789}
+saved!
+Validation at 147: {'NLL': -66.96445592244466}
+saved!
+Validation at 148: {'NLL': -65.04831822713216}
+Validation at 149: {'NLL': -61.01915740966797}
+Validation at 150: {'NLL': -67.48445383707683}
+saved!
+Validation at 151: {'NLL': -75.67528915405273}
+saved!
+Validation at 152: {'NLL': -63.513909657796226}
+Validation at 153: {'NLL': -68.45088958740234}
+Validation at 154: {'NLL': -76.78951772054036}
+saved!
+Validation at 155: {'NLL': -77.11644236246745}
+saved!
+Validation at 156: {'NLL': -77.45094045003255}
+saved!
+Validation at 157: {'NLL': -66.02818298339844}
+Validation at 158: {'NLL': -79.24981435139973}
+saved!
+Validation at 159: {'NLL': -81.0014762878418}
+saved!
+Validation at 160: {'NLL': -77.42386245727539}
+Validation at 161: {'NLL': -69.99962870279948}
+Validation at 162: {'NLL': -86.41230010986328}
+saved!
+Validation at 163: {'NLL': -83.19059880574544}
+Validation at 164: {'NLL': -84.08875020345052}
+Validation at 165: {'NLL': -88.90515772501628}
+saved!
+Validation at 166: {'NLL': -86.13347625732422}
+Validation at 167: {'NLL': -80.97875595092773}
+Validation at 168: {'NLL': -50.102029164632164}
+Validation at 169: {'NLL': -92.67020924886067}
+saved!
+Validation at 170: {'NLL': -85.98364384969075}
+Validation at 171: {'NLL': -87.6073735555013}
+Validation at 172: {'NLL': -95.76627349853516}
+saved!
+Validation at 173: {'NLL': -84.76335271199544}
+Validation at 174: {'NLL': -91.06420771280925}
+Validation at 175: {'NLL': -96.91321563720703}
+saved!
+Validation at 176: {'NLL': -93.34576161702473}
+Validation at 177: {'NLL': -97.11738840738933}
+saved!
+Validation at 178: {'NLL': -94.03290430704753}
+Validation at 179: {'NLL': -101.68200429280598}
+saved!
+Validation at 180: {'NLL': -103.21826426188152}
+saved!
+Validation at 181: {'NLL': -82.52593231201172}
+Validation at 182: {'NLL': -108.43603769938152}
+saved!
+Validation at 183: {'NLL': -88.93354161580403}
+Validation at 184: {'NLL': -91.40092341105144}
+Validation at 185: {'NLL': -105.48324584960938}
+Validation at 186: {'NLL': -106.16601435343425}
+Validation at 187: {'NLL': -112.05902862548828}
+saved!
+Validation at 188: {'NLL': -99.80009078979492}
+Validation at 189: {'NLL': -101.87907155354817}
+Validation at 190: {'NLL': -109.0311279296875}
+Validation at 191: {'NLL': -104.17020161946614}
+Validation at 192: {'NLL': -109.19978713989258}
+Validation at 193: {'NLL': -114.78638458251953}
+saved!
+Validation at 194: {'NLL': -119.50265248616536}
+saved!
+Validation at 195: {'NLL': -86.96568298339844}
+Validation at 196: {'NLL': -99.71290334065755}
+Validation at 197: {'NLL': -98.43889617919922}
+Validation at 198: {'NLL': -115.35591888427734}
+Validation at 199: {'NLL': -112.90829976399739}
+Validation at 200: {'NLL': -105.01256561279297}
+Validation at 201: {'NLL': -107.20414225260417}
+Validation at 202: {'NLL': -110.00870259602864}
+Validation at 203: {'NLL': -112.15444437662761}
+Validation at 204: {'NLL': -113.97937520345052}
+Validation at 205: {'NLL': -124.5874532063802}
+saved!
+Validation at 206: {'NLL': -122.74387613932292}
+Validation at 207: {'NLL': -123.63878631591797}
+Validation at 208: {'NLL': -119.25106811523438}
+Validation at 209: {'NLL': -112.72381591796875}
+Validation at 210: {'NLL': -126.52896626790364}
+saved!
+Validation at 211: {'NLL': -114.02123769124348}
+Validation at 212: {'NLL': -117.69793955485027}
+Validation at 213: {'NLL': -57.91041278839111}
+Validation at 214: {'NLL': -113.73501841227214}
+Validation at 215: {'NLL': -120.61854553222656}
+Validation at 216: {'NLL': -105.09066009521484}
+Validation at 217: {'NLL': -128.65576171875}
+saved!
+Validation at 218: {'NLL': -117.04514821370442}
+Validation at 219: {'NLL': -116.24283345540364}
+Validation at 220: {'NLL': -120.96529642740886}
+Validation at 221: {'NLL': -116.92334747314453}
+Validation at 222: {'NLL': -110.2346420288086}
+Validation at 223: {'NLL': -119.78128051757812}
+Validation at 224: {'NLL': -117.78642018636067}
+Validation at 225: {'NLL': -123.99900309244792}
+Validation at 226: {'NLL': -92.81073379516602}
+Validation at 227: {'NLL': -114.68353780110677}
+Validation at 228: {'NLL': -121.34519704182942}
+Validation at 229: {'NLL': -114.83685811360677}
+Validation at 230: {'NLL': -126.40055338541667}
+Validation at 231: {'NLL': -135.80970764160156}
+saved!
+Validation at 232: {'NLL': -120.35482788085938}
+Validation at 233: {'NLL': -119.51941426595052}
+Validation at 234: {'NLL': -124.0358174641927}
+Validation at 235: {'NLL': -122.91839090983073}
+Validation at 236: {'NLL': -120.2953592936198}
+Validation at 237: {'NLL': -121.22215525309245}
+Validation at 238: {'NLL': -103.92898559570312}
+Validation at 239: {'NLL': -122.31091817220052}
+Validation at 240: {'NLL': -128.72885386149088}
+Validation at 241: {'NLL': -111.65046310424805}
+Validation at 242: {'NLL': -133.53143819173178}
+Validation at 243: {'NLL': -118.42773691813152}
+Validation at 244: {'NLL': -124.11287943522136}
+Validation at 245: {'NLL': -125.36729685465495}
+Validation at 246: {'NLL': -134.3126424153646}
+Validation at 247: {'NLL': -135.10235087076822}
+Validation at 248: {'NLL': -135.04107157389322}
+Validation at 249: {'NLL': -127.4086685180664}
+Validation at 250: {'NLL': -138.47313181559244}
+saved!
+Validation at 251: {'NLL': -129.14884440104166}
+Validation at 252: {'NLL': -132.8616714477539}
+Validation at 253: {'NLL': -125.86113993326823}
+Validation at 254: {'NLL': -117.47552490234375}
+Validation at 255: {'NLL': -119.38637797037761}
+Validation at 256: {'NLL': -124.6163101196289}
+Validation at 257: {'NLL': -123.72696685791016}
+Validation at 258: {'NLL': -123.12091064453125}
+Validation at 259: {'NLL': -133.65951538085938}
+Validation at 260: {'NLL': -136.91104125976562}
+Validation at 261: {'NLL': -136.8975041707357}
+Validation at 262: {'NLL': -134.31191762288412}
+Validation at 263: {'NLL': -121.52635955810547}
+Validation at 264: {'NLL': -127.14705149332683}
+Validation at 265: {'NLL': -117.87231063842773}
+Validation at 266: {'NLL': -133.98390197753906}
+Validation at 267: {'NLL': -131.88980102539062}
+Validation at 268: {'NLL': -127.63212585449219}
+Validation at 269: {'NLL': -113.06225331624348}
+Validation at 270: {'NLL': -125.22325388590495}
+Validation at 271: {'NLL': -129.62847391764322}
+Validation at 272: {'NLL': -132.23141733805338}
+Validation at 273: {'NLL': -123.57064056396484}
+Validation at 274: {'NLL': -133.0071792602539}
+Validation at 275: {'NLL': -129.69606018066406}
+Validation at 276: {'NLL': -127.40918986002605}
+Validation at 277: {'NLL': -114.23704274495442}
+Validation at 278: {'NLL': -126.13869984944661}
+Validation at 279: {'NLL': -133.90809377034506}
+Validation at 280: {'NLL': -133.1031290690104}
+Validation at 281: {'NLL': -122.31080627441406}
+Validation at 282: {'NLL': -121.79231770833333}
+Validation at 283: {'NLL': -125.0022201538086}
+Validation at 284: {'NLL': -113.39523061116536}
+Validation at 285: {'NLL': -130.79031880696616}
+Validation at 286: {'NLL': -127.06976699829102}
+Validation at 287: {'NLL': -137.7748540242513}
+Validation at 288: {'NLL': -132.05216471354166}
+Validation at 289: {'NLL': -124.71090698242188}
+Validation at 290: {'NLL': -137.87660217285156}
+Validation at 291: {'NLL': -137.7812296549479}
+Validation at 292: {'NLL': -122.62067413330078}
+Validation at 293: {'NLL': -129.2747014363607}
+Validation at 294: {'NLL': -127.39620971679688}
+Validation at 295: {'NLL': -141.86507161458334}
+saved!
+Validation at 296: {'NLL': -138.09676615397134}
+Validation at 297: {'NLL': -121.78726959228516}
+Validation at 298: {'NLL': -140.39104715983072}
+Validation at 299: {'NLL': -133.47138468424478}
+Validation at 300: {'NLL': -117.35313034057617}
+Validation at 301: {'NLL': -117.15987141927083}
+Validation at 302: {'NLL': -137.10138193766275}
+Validation at 303: {'NLL': -125.56946309407552}
+Validation at 304: {'NLL': -112.47737884521484}
+Validation at 305: {'NLL': -114.94991811116536}
+Validation at 306: {'NLL': -128.58768717447916}
+Validation at 307: {'NLL': -133.89134216308594}
+Validation at 308: {'NLL': -128.81634775797525}
+Validation at 309: {'NLL': -137.57437642415366}
+Validation at 310: {'NLL': -136.37883504231772}
+Validation at 311: {'NLL': -141.2912623087565}
+Validation at 312: {'NLL': -125.61672719319661}
+Validation at 313: {'NLL': -142.6323674519857}
+saved!
+Validation at 314: {'NLL': -115.61953226725261}
+Validation at 315: {'NLL': -129.37638346354166}
+Validation at 316: {'NLL': -136.27529907226562}
+Validation at 317: {'NLL': -123.36485290527344}
+Validation at 318: {'NLL': -122.72016906738281}
+Validation at 319: {'NLL': -144.86769104003906}
+saved!
+Validation at 320: {'NLL': -121.25685119628906}
+Validation at 321: {'NLL': -98.83989079793294}
+Validation at 322: {'NLL': -135.69124348958334}
+Validation at 323: {'NLL': -137.77063751220703}
+Validation at 324: {'NLL': -134.37261454264322}
+Validation at 325: {'NLL': -128.19682439168295}
+Validation at 326: {'NLL': -130.47136052449545}
+Validation at 327: {'NLL': -135.02281697591147}
+Validation at 328: {'NLL': -137.3940684000651}
+Validation at 329: {'NLL': -133.02659861246744}
+Validation at 330: {'NLL': -122.47752634684245}
+Validation at 331: {'NLL': -140.62943013509116}
+Validation at 332: {'NLL': -133.64844258626303}
+Validation at 333: {'NLL': -133.85118103027344}
+Validation at 334: {'NLL': -127.26234436035156}
+Validation at 335: {'NLL': -133.81640116373697}
+Validation at 336: {'NLL': -127.25175348917644}
+Validation at 337: {'NLL': -141.5726521809896}
+Validation at 338: {'NLL': -144.40389506022134}
+Validation at 339: {'NLL': -130.3820597330729}
+Validation at 340: {'NLL': -133.5426483154297}
+Validation at 341: {'NLL': -131.26329549153647}
+Validation at 342: {'NLL': -131.6357421875}
+Validation at 343: {'NLL': -109.16002400716145}
+Validation at 344: {'NLL': -113.51773198445638}
+Validation at 345: {'NLL': -110.01496124267578}
+Validation at 346: {'NLL': -102.02466201782227}
+Validation at 347: {'NLL': -142.06266276041666}
+Validation at 348: {'NLL': -137.00341288248697}
+Validation at 349: {'NLL': -142.66211446126303}
+Validation at 350: {'NLL': -138.60948181152344}
+Validation at 351: {'NLL': -140.2761688232422}
+Validation at 352: {'NLL': -121.69625091552734}
+Validation at 353: {'NLL': -136.52134068806967}
+Validation at 354: {'NLL': -136.3010228474935}
+Validation at 355: {'NLL': -133.8781255086263}
+Validation at 356: {'NLL': -127.86975987752278}
+Validation at 357: {'NLL': -135.1335703531901}
+Validation at 358: {'NLL': -135.80794270833334}
+Validation at 359: {'NLL': -124.42248026529948}
+Validation at 360: {'NLL': -140.72459157307944}
+Validation at 361: {'NLL': -97.8712387084961}
+Validation at 362: {'NLL': -125.51054763793945}
+Validation at 363: {'NLL': -128.66563669840494}
+Validation at 364: {'NLL': -136.13334147135416}
+Validation at 365: {'NLL': -139.61202239990234}
+Validation at 366: {'NLL': -142.35159810384116}
+Validation at 367: {'NLL': -146.06387329101562}
+saved!
+Validation at 368: {'NLL': -141.13330586751303}
+Validation at 369: {'NLL': -141.23922220865884}
+Validation at 370: {'NLL': -139.7337506612142}
+Validation at 371: {'NLL': -139.4115956624349}
+Validation at 372: {'NLL': -136.0311024983724}
+Validation at 373: {'NLL': -134.74866994222006}
+Validation at 374: {'NLL': -125.43237813313802}
+Validation at 375: {'NLL': -125.10631688435872}
+Validation at 376: {'NLL': -133.2783406575521}
+Validation at 377: {'NLL': -145.5881805419922}
+Validation at 378: {'NLL': -110.30902862548828}
+Validation at 379: {'NLL': -102.11980851491292}
+Validation at 380: {'NLL': -127.99411010742188}
+Validation at 381: {'NLL': -119.58617401123047}
+Validation at 382: {'NLL': -135.51283518473306}
+Validation at 383: {'NLL': -142.121218363444}
+Validation at 384: {'NLL': -138.27272923787436}
+Validation at 385: {'NLL': -129.14222462972006}
+Validation at 386: {'NLL': -137.2539431254069}
+Validation at 387: {'NLL': -139.38725789388022}
+Validation at 388: {'NLL': -124.06387074788411}
+Validation at 389: {'NLL': -135.67228190104166}
+Validation at 390: {'NLL': -136.78687540690103}
+Validation at 391: {'NLL': -136.47149022420248}
+Validation at 392: {'NLL': -111.74678802490234}
+Validation at 393: {'NLL': -134.07632319132486}
+Validation at 394: {'NLL': -127.8739751180013}
+Validation at 395: {'NLL': -119.74457931518555}
+Validation at 396: {'NLL': -132.25486755371094}
+Validation at 397: {'NLL': -120.9004561106364}
+Validation at 398: {'NLL': -118.85992177327473}
+Validation at 399: {'NLL': -121.30228233337402}
+Validation at 400: {'NLL': -121.5387414296468}
+Validation at 401: {'NLL': -137.19951629638672}
+Validation at 402: {'NLL': -138.8606694539388}
+Validation at 403: {'NLL': -119.42449442545573}
+Validation at 404: {'NLL': -118.58841133117676}
+Validation at 405: {'NLL': -122.1872673034668}
+Validation at 406: {'NLL': -110.75887648264568}
+Validation at 407: {'NLL': -97.19694900512695}
+Validation at 408: {'NLL': -128.94578170776367}
+Validation at 409: {'NLL': -128.90342966715494}
+Validation at 410: {'NLL': -125.02601114908855}
+Validation at 411: {'NLL': -124.75185648600261}
+Validation at 412: {'NLL': -130.94617080688477}
+Validation at 413: {'NLL': -133.12416076660156}
+Validation at 414: {'NLL': -106.54276784261067}
+Validation at 415: {'NLL': -121.57017453511556}
+Validation at 416: {'NLL': -118.81812890370686}
+Validation at 417: {'NLL': -128.95964813232422}
+Validation at 418: {'NLL': -132.8435490926107}
+Validation at 419: {'NLL': -131.35874048868814}
+Validation at 420: {'NLL': -122.78712463378906}
+Validation at 421: {'NLL': -99.22094249725342}
+Validation at 422: {'NLL': -130.40602111816406}
+Validation at 423: {'NLL': -135.53794860839844}
+Validation at 424: {'NLL': -125.73033650716145}
+Validation at 425: {'NLL': -128.61438624064127}
+Validation at 426: {'NLL': -124.8478177388509}
+Validation at 427: {'NLL': -126.99798202514648}
+Validation at 428: {'NLL': -121.58233133951823}
+Validation at 429: {'NLL': -119.46553802490234}
+Validation at 430: {'NLL': -139.50750096638998}
+Validation at 431: {'NLL': -142.96173604329428}
+Validation at 432: {'NLL': -135.21655782063803}
+Validation at 433: {'NLL': -138.76305135091147}
+Validation at 434: {'NLL': -135.96768188476562}
+Validation at 435: {'NLL': -128.5283571879069}
+Validation at 436: {'NLL': -117.09405899047852}
+Validation at 437: {'NLL': -109.53796259562175}
+Validation at 438: {'NLL': -122.73162206013997}
+Validation at 439: {'NLL': -116.68146673838298}
+Validation at 440: {'NLL': -128.49504025777182}
+Validation at 441: {'NLL': -126.08646901448567}
+Validation at 442: {'NLL': -115.325621287028}
+Validation at 443: {'NLL': -130.22264862060547}
+Validation at 444: {'NLL': -101.24289258321126}
+Validation at 445: {'NLL': -125.34318288167317}
+Validation at 446: {'NLL': -123.49111302693684}
+Validation at 447: {'NLL': -125.31515630086263}
+Validation at 448: {'NLL': -122.67547925313313}
+Validation at 449: {'NLL': -100.16187222798665}
+Validation at 450: {'NLL': -113.47419865926106}
+Validation at 451: {'NLL': -129.64556630452475}
+Validation at 452: {'NLL': -120.37895838419597}
+Validation at 453: {'NLL': -102.69575087229411}
+Validation at 454: {'NLL': -112.39841429392497}
+Validation at 455: {'NLL': -97.80116907755534}
+Validation at 456: {'NLL': -123.73754119873047}
+Validation at 457: {'NLL': -87.92544682820638}
+Validation at 458: {'NLL': -70.14059321085612}
+Validation at 459: {'NLL': -139.7856470743815}
+Validation at 460: {'NLL': -114.65901343027751}
+Validation at 461: {'NLL': -118.74876181284587}
+Validation at 462: {'NLL': -111.90733496348064}
+Validation at 463: {'NLL': -106.92219352722168}
+Validation at 464: {'NLL': -118.68093903859456}
+Validation at 465: {'NLL': -119.36508051554362}
+Validation at 466: {'NLL': -132.68622016906738}
+Validation at 467: {'NLL': -126.73296483357747}
+Validation at 468: {'NLL': -124.36049397786458}
+Validation at 469: {'NLL': -105.16811561584473}
+Validation at 470: {'NLL': -115.66990788777669}
+Validation at 471: {'NLL': -130.99746449788412}
+Validation at 472: {'NLL': -120.9944429397583}
+Validation at 473: {'NLL': -131.1916071573893}
+Validation at 474: {'NLL': -115.89944362640381}
+Validation at 475: {'NLL': -123.1917273203532}
+Validation at 476: {'NLL': -115.34303029378255}
+Validation at 477: {'NLL': -135.1494394938151}
+Validation at 478: {'NLL': -130.57815806070963}
+Validation at 479: {'NLL': -133.35077158610025}
+Validation at 480: {'NLL': -114.32204564412434}
+Validation at 481: {'NLL': -116.56882095336914}
+Validation at 482: {'NLL': -115.73241806030273}
+Validation at 483: {'NLL': -107.37737274169922}
+Validation at 484: {'NLL': -108.98722076416016}
+Validation at 485: {'NLL': -110.91012191772461}
+Validation at 486: {'NLL': -113.43279520670573}
+Validation at 487: {'NLL': -129.80902226765951}
+Validation at 488: {'NLL': -130.4346408843994}
+Validation at 489: {'NLL': -126.04967562357585}
+Validation at 490: {'NLL': -117.06661828358968}
+Validation at 491: {'NLL': -108.62536239624023}
+Validation at 492: {'NLL': -125.99129867553711}
+Validation at 493: {'NLL': -128.10708045959473}
+Validation at 494: {'NLL': -107.76851654052734}
+Validation at 495: {'NLL': -120.62189388275146}
+Validation at 496: {'NLL': -125.88390159606934}
+Validation at 497: {'NLL': -116.74541600545247}
+Validation at 498: {'NLL': -109.57923380533855}
+Validation at 499: {'NLL': -108.4123649597168}
+Validation at 500: {'NLL': -103.4971383412679}
+Validation at 501: {'NLL': -124.43624496459961}
+Validation at 502: {'NLL': -109.36908753712972}
+Validation at 503: {'NLL': -126.23634052276611}
+Validation at 504: {'NLL': -107.01998456319173}
+Validation at 505: {'NLL': -90.22501118977864}
+Validation at 506: {'NLL': -115.20024967193604}
+Validation at 507: {'NLL': -119.30730565388997}
+Validation at 508: {'NLL': -117.46415996551514}
+Validation at 509: {'NLL': -116.67908223470052}
+Validation at 510: {'NLL': -117.04932276407878}
+Validation at 511: {'NLL': -101.3208122253418}
+Validation at 512: {'NLL': -123.21918137868245}
+Validation at 513: {'NLL': -126.0041898091634}
+Validation at 514: {'NLL': -117.07295767466228}
+Validation at 515: {'NLL': -120.37083594004314}
+Validation at 516: {'NLL': -114.69260025024414}
+Validation at 517: {'NLL': -133.2221997578939}
+Validation at 518: {'NLL': -127.31142965952556}
+Validation at 519: {'NLL': -127.48471132914226}
+Validation at 520: {'NLL': -127.66717274983723}
+Validation at 521: {'NLL': -121.86772505442302}
+Validation at 522: {'NLL': -123.1095396677653}
+Validation at 523: {'NLL': -112.02978134155273}
+Validation at 524: {'NLL': -137.7571938832601}
+Validation at 525: {'NLL': -133.4030787150065}
+Validation at 526: {'NLL': -130.50085957845053}
+Validation at 527: {'NLL': -110.39899190266927}
+Validation at 528: {'NLL': -130.1691862742106}
+Validation at 529: {'NLL': -101.44856516520183}
+Validation at 530: {'NLL': -106.37625122070312}
+Validation at 531: {'NLL': -126.54390207926433}
+Validation at 532: {'NLL': -112.65261967976888}
+Validation at 533: {'NLL': -110.54114405314128}
+Validation at 534: {'NLL': -110.27501678466797}
+Validation at 535: {'NLL': -108.14153099060059}
+Validation at 536: {'NLL': -132.16591008504233}
+Validation at 537: {'NLL': -137.9920908610026}
+Validation at 538: {'NLL': -136.12852096557617}
+Validation at 539: {'NLL': -121.29014046986897}
+Validation at 540: {'NLL': -130.9388027191162}
+Validation at 541: {'NLL': -114.39904340108235}
+Validation at 542: {'NLL': -91.85503737131755}
+Validation at 543: {'NLL': -129.47696781158447}
+Validation at 544: {'NLL': -129.86624813079834}
+Validation at 545: {'NLL': -110.14262390136719}
+Validation at 546: {'NLL': -101.07540384928386}
+Validation at 547: {'NLL': -128.30974960327148}
+Validation at 548: {'NLL': -113.57295989990234}
+Validation at 549: {'NLL': -109.35832405090332}
+Validation at 550: {'NLL': -121.09531720479329}
+Validation at 551: {'NLL': -117.42468007405598}
+Validation at 552: {'NLL': -110.62056223551433}
+Validation at 553: {'NLL': -113.09884389241536}
+Validation at 554: {'NLL': -108.96312459309895}
+Validation at 555: {'NLL': -112.98850377400716}
+Validation at 556: {'NLL': -111.9000752766927}
+Validation at 557: {'NLL': -110.74368031819661}
+Validation at 558: {'NLL': -122.51424090067546}
+Validation at 559: {'NLL': -114.66758219401042}
+Validation at 560: {'NLL': -127.62903690338135}
+Validation at 561: {'NLL': -118.85134633382161}
+Validation at 562: {'NLL': -116.09302520751953}
+Validation at 563: {'NLL': -85.30819702148438}
+Validation at 564: {'NLL': -107.00863138834636}
+Validation at 565: {'NLL': -98.52841695149739}
+Validation at 566: {'NLL': -98.17984517415364}
+Validation at 567: {'NLL': -129.88659890492758}
+Validation at 568: {'NLL': -114.26722272237141}
+Validation at 569: {'NLL': -115.6072006225586}
+Validation at 570: {'NLL': -89.60692596435547}
+Validation at 571: {'NLL': -93.5002670288086}
+Validation at 572: {'NLL': -96.17503102620442}
+Validation at 573: {'NLL': -84.01361592610677}
+Validation at 574: {'NLL': -112.36000061035156}
+Validation at 575: {'NLL': -115.42727088928223}
+Validation at 576: {'NLL': -104.59068743387859}
+Validation at 577: {'NLL': -110.34381484985352}
+Validation at 578: {'NLL': -105.82620493570964}
+Validation at 579: {'NLL': -83.56042226155598}
+Validation at 580: {'NLL': -81.89374542236328}
+Validation at 581: {'NLL': -64.05557378133138}
+Validation at 582: {'NLL': -112.7506815592448}
+Validation at 583: {'NLL': -96.0191650390625}
+Validation at 584: {'NLL': -115.87109375}
+Validation at 585: {'NLL': -112.40379587809245}
+Validation at 586: {'NLL': -95.62461344401042}
+Validation at 587: {'NLL': -94.31543223063152}
+Validation at 588: {'NLL': -130.53225580851236}
+Validation at 589: {'NLL': -119.61815897623698}
+Validation at 590: {'NLL': -114.57320308685303}
+Validation at 591: {'NLL': -101.8771162033081}
+Validation at 592: {'NLL': -129.1218630472819}
+Validation at 593: {'NLL': -133.56990687052408}
+Validation at 594: {'NLL': -119.55517705281575}
+Validation at 595: {'NLL': -118.37936019897461}
+Validation at 596: {'NLL': -113.62198257446289}
+Validation at 597: {'NLL': -100.1775614420573}
+Validation at 598: {'NLL': -97.96701304117839}
+Validation at 599: {'NLL': -126.45494492848714}
+Validation at 600: {'NLL': -123.00890223185222}
+Validation at 601: {'NLL': -94.78182474772136}
+Validation at 602: {'NLL': -69.20879618326823}
+Validation at 603: {'NLL': -125.20307223002116}
+Validation at 604: {'NLL': -129.29492410024008}
+Validation at 605: {'NLL': -120.38356081644694}
+Validation at 606: {'NLL': -100.51013437906902}
+Validation at 607: {'NLL': -114.06083679199219}
+Validation at 608: {'NLL': -118.40125020345052}
+Validation at 609: {'NLL': -115.15107599894206}
+Validation at 610: {'NLL': -110.37488174438477}
+Validation at 611: {'NLL': -110.18302154541016}
+Validation at 612: {'NLL': -113.44962692260742}
+Validation at 613: {'NLL': -121.43285751342773}
+Validation at 614: {'NLL': -95.11922200520833}
+Validation at 615: {'NLL': -109.09791564941406}
+Validation at 616: {'NLL': -102.62173207600911}
+Validation at 617: {'NLL': -115.62914530436198}
+Validation at 618: {'NLL': -110.7768440246582}
+Validation at 619: {'NLL': -103.2609125773112}
+Validation at 620: {'NLL': -103.02295176188152}
+Validation at 621: {'NLL': -103.12465159098308}
+Validation at 622: {'NLL': -102.83448155721028}
+Validation at 623: {'NLL': -112.11335372924805}
+Validation at 624: {'NLL': -126.26055272420247}
+Validation at 625: {'NLL': -104.70550155639648}
+Validation at 626: {'NLL': -105.08153279622395}
+Validation at 627: {'NLL': -97.0864028930664}
+Validation at 628: {'NLL': -87.63204701741536}
+Validation at 629: {'NLL': -109.83708572387695}
+Validation at 630: {'NLL': -98.9655049641927}
+Validation at 631: {'NLL': -94.73973337809245}
+Validation at 632: {'NLL': -96.17423756917317}
+Validation at 633: {'NLL': -125.83847300211589}
+Validation at 634: {'NLL': -104.4421157836914}
+Validation at 635: {'NLL': -102.31814956665039}
+Validation at 636: {'NLL': -112.04882303873698}
+Validation at 637: {'NLL': -102.61331176757812}
+Validation at 638: {'NLL': -82.43166605631511}
+Validation at 639: {'NLL': -77.34497324625652}
+Validation at 640: {'NLL': -109.45114771525066}
+Validation at 641: {'NLL': -80.02330780029297}
+Validation at 642: {'NLL': -110.84357452392578}
+Validation at 643: {'NLL': -105.66469828287761}
+Validation at 644: {'NLL': -81.0776850382487}
+Validation at 645: {'NLL': -104.91640981038411}
+Validation at 646: {'NLL': -109.04592895507812}
+Validation at 647: {'NLL': -76.27095286051433}
+Validation at 648: {'NLL': -93.39521026611328}
+Validation at 649: {'NLL': -83.89735921223958}
+Validation at 650: {'NLL': -97.6829833984375}
+Validation at 651: {'NLL': -90.43490346272786}
+Validation at 652: {'NLL': -104.00072224934895}
+Validation at 653: {'NLL': -107.98417154947917}
+Validation at 654: {'NLL': -113.63413492838542}
+Validation at 655: {'NLL': -122.45753796895345}
+Validation at 656: {'NLL': -133.92113590240479}
+Validation at 657: {'NLL': -133.49124717712402}
+Validation at 658: {'NLL': -113.81361134847005}
+Validation at 659: {'NLL': -91.09144083658855}
+Validation at 660: {'NLL': -98.26334126790364}
+Validation at 661: {'NLL': -100.6911137898763}
+Validation at 662: {'NLL': -81.89445241292317}
+Validation at 663: {'NLL': -105.35620371500652}
+Validation at 664: {'NLL': -117.87644322713216}
+Validation at 665: {'NLL': -93.44551849365234}
+Validation at 666: {'NLL': -105.14759826660156}
+Validation at 667: {'NLL': -75.68370056152344}
+Validation at 668: {'NLL': -103.16446940104167}
+Validation at 669: {'NLL': -79.33826700846355}
+Validation at 670: {'NLL': -124.22982915242513}
+Validation at 671: {'NLL': -98.35611089070638}
+Validation at 672: {'NLL': -86.50122578938802}
+Validation at 673: {'NLL': -115.35304005940755}
+Validation at 674: {'NLL': -110.37953186035156}
+Validation at 675: {'NLL': -106.31043879191081}
+Validation at 676: {'NLL': -126.70283381144206}
+Validation at 677: {'NLL': -86.69406127929688}
+Validation at 678: {'NLL': -79.13588968912761}
+Validation at 679: {'NLL': -92.65515391031902}
+Validation at 680: {'NLL': -110.92239125569661}
+Validation at 681: {'NLL': -110.54593149820964}
+Validation at 682: {'NLL': -88.16083526611328}
+Validation at 683: {'NLL': -134.2332436243693}
+Validation at 684: {'NLL': -115.80677922566731}
+Validation at 685: {'NLL': -116.17690531412761}
+Validation at 686: {'NLL': -113.18513997395833}
+Validation at 687: {'NLL': -116.40357335408528}
+Validation at 688: {'NLL': -108.11929702758789}
+Validation at 689: {'NLL': -106.50292587280273}
+Validation at 690: {'NLL': -101.02904001871745}
+Validation at 691: {'NLL': -107.71556091308594}
+Validation at 692: {'NLL': -97.15475972493489}
+Validation at 693: {'NLL': -103.6011454264323}
+Validation at 694: {'NLL': -96.99988047281902}
+Validation at 695: {'NLL': -94.93938954671223}
+Validation at 696: {'NLL': -103.175537109375}
+Validation at 697: {'NLL': -102.48830668131511}
+Validation at 698: {'NLL': -94.45375569661458}
+Validation at 699: {'NLL': -82.98595428466797}
+Validation at 700: {'NLL': -71.49338785807292}
+Validation at 701: {'NLL': -93.7705643971761}
+Validation at 702: {'NLL': -115.02243677775066}
+Validation at 703: {'NLL': -87.80452982584636}
+Validation at 704: {'NLL': -78.8297627766927}
+Validation at 705: {'NLL': -87.85746256510417}
+Validation at 706: {'NLL': -98.00013478597005}
+Validation at 707: {'NLL': -74.89474995930989}
+Validation at 708: {'NLL': -96.83756510416667}
+Validation at 709: {'NLL': -84.80942789713542}
+Validation at 710: {'NLL': -85.05158996582031}
+Validation at 711: {'NLL': -87.06311543782552}
+Validation at 712: {'NLL': -82.6076431274414}
+Validation at 713: {'NLL': -114.1802978515625}
+Validation at 714: {'NLL': -119.37788009643555}
+Validation at 715: {'NLL': -96.58571116129558}
+Validation at 716: {'NLL': -88.96167500813802}
+Validation at 717: {'NLL': -100.50679779052734}
+Validation at 718: {'NLL': -75.00308990478516}
+Validation at 719: {'NLL': -85.57444508870442}
+Validation at 720: {'NLL': -81.1326192220052}
+Validation at 721: {'NLL': -103.95602162679036}
+Validation at 722: {'NLL': -96.52047983805339}
+Validation at 723: {'NLL': -93.2573954264323}
+Validation at 724: {'NLL': -99.96187591552734}
+Validation at 725: {'NLL': -77.70334116617839}
+Validation at 726: {'NLL': -82.78031667073567}
+Validation at 727: {'NLL': -74.13327534993489}
+Validation at 728: {'NLL': -89.28268432617188}
+Validation at 729: {'NLL': -89.58280690511067}
+Validation at 730: {'NLL': -83.81167602539062}
+Validation at 731: {'NLL': -92.38076527913411}
+Validation at 732: {'NLL': -66.07206217447917}
+Validation at 733: {'NLL': -110.498228708903}
+Validation at 734: {'NLL': -97.45306142171223}
+Validation at 735: {'NLL': -68.7242914835612}
+Validation at 736: {'NLL': -103.82450866699219}
+Validation at 737: {'NLL': -116.38210868835449}
+Validation at 738: {'NLL': -110.1764030456543}
+Validation at 739: {'NLL': -98.20435587565105}
+Validation at 740: {'NLL': -99.50735982259114}
+Validation at 741: {'NLL': -105.37393442789714}
+Validation at 742: {'NLL': -76.33865610758464}
+Validation at 743: {'NLL': -91.02129872639973}
+Validation at 744: {'NLL': -55.474928538004555}
+Validation at 745: {'NLL': -94.89967091878255}
+Validation at 746: {'NLL': -112.70750172932942}
+Validation at 747: {'NLL': -106.29255676269531}
+Validation at 748: {'NLL': -91.13848368326823}
+Validation at 749: {'NLL': -90.05057779947917}
+Validation at 750: {'NLL': -93.17647552490234}
+Validation at 751: {'NLL': -108.61347834269206}
+Validation at 752: {'NLL': -118.0187276204427}
+Validation at 753: {'NLL': -82.9811528523763}
+Validation at 754: {'NLL': -94.20967102050781}
+Validation at 755: {'NLL': -67.6931864420573}
+Validation at 756: {'NLL': -82.80813090006511}
+Validation at 757: {'NLL': -91.25582631429036}
+Validation at 758: {'NLL': -98.588623046875}
+Validation at 759: {'NLL': -88.8387451171875}
+Validation at 760: {'NLL': -105.28627014160156}
+Validation at 761: {'NLL': -85.55540466308594}
+Validation at 762: {'NLL': -50.50847371419271}
+Validation at 763: {'NLL': -80.53941853841145}
+Validation at 764: {'NLL': -105.93804423014323}
+Validation at 765: {'NLL': -104.35906982421875}
+Validation at 766: {'NLL': -101.42626190185547}
+Validation at 767: {'NLL': -82.08864084879558}
+Validation at 768: {'NLL': -80.03966522216797}
+Validation at 769: {'NLL': -80.61102549235027}
+Validation at 770: {'NLL': -86.66243998209636}
+Validation at 771: {'NLL': -63.187947591145836}
+Validation at 772: {'NLL': -80.29580179850261}
+Validation at 773: {'NLL': -69.97633616129558}
+Validation at 774: {'NLL': -50.86675262451172}
+Validation at 775: {'NLL': -79.5838394165039}
+Validation at 776: {'NLL': -83.9041264851888}
+Validation at 777: {'NLL': -106.1097920735677}
+Validation at 778: {'NLL': -71.37188720703125}
+Validation at 779: {'NLL': -111.58842341105144}
+Validation at 780: {'NLL': -72.33601888020833}
+Validation at 781: {'NLL': -55.22569783528646}
+Validation at 782: {'NLL': -57.62635803222656}
+Validation at 783: {'NLL': -73.44572194417317}
+Validation at 784: {'NLL': -52.848620096842446}
+Validation at 785: {'NLL': -71.65284729003906}
+Validation at 786: {'NLL': -96.74608866373698}
+Validation at 787: {'NLL': -85.4502665201823}
+Validation at 788: {'NLL': -60.56462097167969}
+Validation at 789: {'NLL': -58.701629638671875}
+Validation at 790: {'NLL': -57.971336364746094}
+Validation at 791: {'NLL': -82.63020324707031}
+Validation at 792: {'NLL': -90.23117574055989}
+Validation at 793: {'NLL': -86.58224487304688}
+Validation at 794: {'NLL': -71.17593638102214}
+Validation at 795: {'NLL': -80.43760681152344}
+Validation at 796: {'NLL': -63.50463358561198}
+Validation at 797: {'NLL': -66.88380177815755}
+Validation at 798: {'NLL': -57.60590362548828}
+Validation at 799: {'NLL': -70.08587646484375}
+Validation at 800: {'NLL': -71.88414510091145}
+Validation at 801: {'NLL': -80.04860178629558}
+Validation at 802: {'NLL': -39.58602650960287}
+Validation at 803: {'NLL': -44.799522399902344}
+Validation at 804: {'NLL': -55.282511393229164}
+Validation at 805: {'NLL': -46.960889180501304}
+Validation at 806: {'NLL': -99.36485290527344}
+Validation at 807: {'NLL': -82.65209452311198}
+Validation at 808: {'NLL': -70.92903645833333}
+Validation at 809: {'NLL': -90.85384114583333}
+Validation at 810: {'NLL': -61.80770619710287}
+Validation at 811: {'NLL': -62.44025675455729}
+Validation at 812: {'NLL': -42.13938649495443}
+Validation at 813: {'NLL': -47.060465494791664}
+Validation at 814: {'NLL': -44.99725341796875}
+Validation at 815: {'NLL': -44.180931091308594}
+Validation at 816: {'NLL': -27.73662821451823}
+Validation at 817: {'NLL': -32.3086191813151}
+Validation at 818: {'NLL': -56.54242451985677}
+Validation at 819: {'NLL': -59.51143900553385}
+Validation at 820: {'NLL': -69.67490132649739}
+Validation at 821: {'NLL': -47.38155873616537}
+Validation at 822: {'NLL': -9.113566080729166}
+Validation at 823: {'NLL': -54.205464680989586}
+Validation at 824: {'NLL': -29.961939493815105}
+Validation at 825: {'NLL': -48.0848642985026}
+Validation at 826: {'NLL': -23.072418212890625}
+Validation at 827: {'NLL': 9.651758829752604}
+Validation at 828: {'NLL': -41.82756551106771}
+Validation at 829: {'NLL': -74.78531138102214}
+Validation at 830: {'NLL': -16.195353190104168}
+Validation at 831: {'NLL': -45.53848520914713}
+Validation at 832: {'NLL': -5.286753336588542}
+Validation at 833: {'NLL': 13.256027221679688}
+Validation at 834: {'NLL': -6.926859537760417}
+Validation at 835: {'NLL': -26.282150268554688}
+Validation at 836: {'NLL': 11.279741923014322}
+Validation at 837: {'NLL': -29.89935302734375}
+Validation at 838: {'NLL': -18.456288655598957}
+Validation at 839: {'NLL': -9.090779622395834}
+Validation at 840: {'NLL': -47.73698933919271}
+Validation at 841: {'NLL': -20.0010248819987}
+Validation at 842: {'NLL': -14.406840006510416}
+Validation at 843: {'NLL': -27.466878255208332}
+Validation at 844: {'NLL': 14.990936279296875}
+Validation at 845: {'NLL': 19.32330830891927}
+Validation at 846: {'NLL': -16.28857676188151}
+Validation at 847: {'NLL': -39.10460408528646}
+Validation at 848: {'NLL': -22.256136576334637}
+Validation at 849: {'NLL': -42.899085998535156}
+Validation at 850: {'NLL': -8.707992553710938}
+Validation at 851: {'NLL': -21.369791666666668}
+Validation at 852: {'NLL': -57.66969299316406}
+Validation at 853: {'NLL': -63.9442392985026}
+Validation at 854: {'NLL': -30.44719950358073}
+Validation at 855: {'NLL': -35.14478556315104}
+Validation at 856: {'NLL': 7.876065572102864}
+Validation at 857: {'NLL': 2.2518285115559897}
+Validation at 858: {'NLL': 18.242502848307293}
+Validation at 859: {'NLL': -5.030815124511719}
+Validation at 860: {'NLL': -16.696741739908855}
+Validation at 861: {'NLL': -5.2849985758463545}
+Validation at 862: {'NLL': 41.680989583333336}
+Validation at 863: {'NLL': 42.83580017089844}
+Validation at 864: {'NLL': -26.004842122395832}
+Validation at 865: {'NLL': 14.03302001953125}
+Validation at 866: {'NLL': 9.084098815917969}
+Validation at 867: {'NLL': 52.83104705810547}
+Validation at 868: {'NLL': 53.76856486002604}
