@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 import torch
 from models import VAE
 
-def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None):
+def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=256, D=256, natural=False,device=None):
     # EVALUATION
     if model_best is None:
-        D = len(var_info.keys())
-        L = D
+        D = D
+        L = len(var_info.keys())
         total_num_vals = 0
         for var in var_info.keys():
             total_num_vals += var_info[var]['num_vals']
+            # categorical input dimension is one-hot thus num_vals is input
         model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M, natural=natural, device=device)
         model_best.to(device)
         # load best performing model
@@ -99,8 +100,8 @@ def plot_curve(name, nll_val):
     plt.show()
     plt.close()
 
-def get_test_results(nll_val, result_path, test_loader,var_info):
-    test_loss = evaluation(test_loader, var_info, name=result_path)
+def get_test_results(nll_val, result_path, test_loader,var_info, D=256, natural=None, device=None):
+    test_loss = evaluation(test_loader, var_info, name=result_path, D=D, natural=natural,device=device)
     f = open(result_path + '_test_loss.txt', "w")
     f.write(str(test_loss))
     f.close()
