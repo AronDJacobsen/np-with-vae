@@ -125,69 +125,71 @@ class Decoder(nn.Module):
         else:
             a=0
 
-
-
-
-        '''
-        if self.distribution == 'categorical':
-            # Categorical distribution has multiple possible outputs
-            # output dim: (batch, D*L values) where D are all outputs and L is the number of possible values per output
-            #   - e.g. D are image dimension and L are possible pixel values
-            b = h_d.shape[0] # B, batch size
-            d = h_d.shape[1] // self.num_vals # D, (D*L) // L = D, how often L goes up to D*L
-            h_d = h_d.view(b, d, self.num_vals) # reshaping to (B, D, L)
-            # softmax over last dimension L
-            #   - e.g. probs for pixel values for each pixel in img
-            prob_d = torch.softmax(h_d, 2)
-            # probability output of decoder
-            return prob_d
-        elif self.distribution == 'gaussian':
-            # return h_d
-            # num_vals for gaussian is the number of numerical values in the dataset
-            b = h_d.shape[0]
-            d = h_d.shape[1] // self.num_vals
-            h_d = h_d.view(b, d, self.num_vals)
-            prob_d = torch.normal(h_d) # (batch, num_vals, 2)
-            return prob_d
-        '''
         # TODO: concatenate categorical and gaussian distributions
         return prob_d
 
     def sample(self, z):
         # TODO: cannot do flatten if z is batched
-        prob_d = self.decode(z) # probability output
+        output = self.decode(z) # probability output
         # prob_d has [mu1, sigma1, mu2, sigma2, ...]
-        x_news = torch.zeros(prob_d.size()[0], len(self.var_info))
-        for batch in range(prob_d.size()[0]):
-            vare = 0
-            for var in self.var_info:
-                pmu = torch.tensor([prob_d[batch, vare]])
-                psigma = prob_d[batch, vare+1]
-                vare = var + 2
-                if self.var_info[var]['dtype'] == 'categorical':
-                    # b = prob_d.shape[0] # batch size
-                    # m = prob_d.shape[1] # output dimension
-                    # below is unnecessary because already performed in self.decode()
-                    #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-                    # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
-                    # we want one sample per number of possible values (e.g. pixel values)
-                    x_new = torch.multinomial(pmu, num_samples=1) # .view(b, m) # new view is (batch, output dims, 1)
-                    x_news[batch, var] = x_new
+        total_numvals = sum([self.var_info[var]['num_vals'] if self.var_info[var]['dtype'] == 'categorical' else 1 for var in self.var_info.keys()])
+        x_reconstructed = torch.zeros(z.shape[0], total_numvals)
+        #for batch in range(output.size()[0]):
+        # var_index = 0
+        output_idx = 0
+        recon_idx = 0
+        for x_idx, var in enumerate(self.var_info):
+            num_vals = self.var_info[var]['num_vals']
 
-                elif self.var_info[var]['dtype'] == 'numerical':
-                    # b = prob_d.shape[0] # batch size
-                    # m = prob_d.shape[1] # output dimension
-                    # below is unnecessary because already performed in self.decode()
-                    #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
-                    # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
-                    # we want one sample per number of possible values (e.g. pixel values)
-                    x_new = torch.normal(pmu,psigma)#.view(b, m)
-                    x_news[batch,var] = x_new
-                # elif self.distribution == 'bernoulli':
-                #     x_new = torch.bernoulli(prob_d) # output dim is already (batch, output dims, 1)
-                else:
-                    raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
-        return x_news
+            if self.var_info[var]['dtype'] == 'categorical':
+
+                outs = output[:, output_idx:output_idx+num_vals] # TODO: output and x_recon can't be accessed similarly.
+                outs = outs.view(outs.shape[0],-1, num_vals) 
+                p = outs.view(-1, num_vals)
+
+                # b = prob_d.shape[0] # batch size
+                # m = prob_d.shape[1] # output dimension
+                # below is unnecessary because already performed in self.decode()
+                #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
+                # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
+                # we want one sample per number of possible values (e.g. pixel values)
+                x_batch = torch.multinomial(p, num_samples=1) # .view(b, m) # new view is (batch, output dims, 1)
+                # one hot encoding x_batch:
+                x_batch = F.one_hot(x_batch.flatten(), num_classes = num_vals)
+
+                x_reconstructed[:, recon_idx:recon_idx+num_vals] = x_batch
+
+                # Updating indices
+                recon_idx += num_vals
+                output_idx += num_vals
+
+
+            elif self.var_info[var]['dtype'] == 'numerical':
+                # b = prob_d.shape[0] # batch size
+                # m = prob_d.shape[1] # output dimension
+                # below is unnecessary because already performed in self.decode()
+                #prob_d = prob_d.view(prob_d.shape[0], -1, self.num_vals) # -1 is inferred from other dims (what is left)
+                # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
+                # we want one sample per number of possible values (e.g. pixel values)
+
+                mu, log_var = torch.chunk(output[:, output_idx:output_idx+num_vals], 2, dim=1)
+                # Extracting mu and std. values. 
+                #mu = torch.tensor([output[:, var_index]]) # The mu's extracted from the output
+                std = torch.exp(0.5*log_var) # std = torch.exp(0.5*output[:, var_index+1]) # The sigma's extracred from the output
+
+                x_batch = torch.normal(mu, std)#.view(b, m)
+
+                x_reconstructed[:, recon_idx:recon_idx+1] = x_batch
+
+                # Updating indices
+                recon_idx += 1
+                output_idx += num_vals
+
+            # elif self.distribution == 'bernoulli':
+            #     x_new = torch.bernoulli(prob_d) # output dim is already (batch, output dims, 1)
+            else:
+                raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
+        return x_reconstructed
 
 
     def log_prob(self, x, z):

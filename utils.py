@@ -218,7 +218,11 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
         imputed_test_batch = imputed_test_batch.to(device)
 
         # with torch no grad
-        #a = model(imputed_test_batch)
+        batch_idx = 0
+        z = model.forward(imputed_test_batch)['output']
+
+        model.decoder.sample(z)
+
         #output = model_best.forward(imputed_test_batch, reduction='avg')['output']
         #loss = loss + loss_t.item()
         #N = N + test_batch.shape[0]
