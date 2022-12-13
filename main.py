@@ -5,7 +5,7 @@ import torch
 from train import training
 from models import *
 from dataloaders import *
-from utils import samples_real, plot_curve, evaluation, get_test_results
+from utils import samples_real, plot_curve, evaluation, get_test_results, evaluate_to_table
 from torch.utils.data import Dataset, DataLoader, random_split
 
 
@@ -109,6 +109,7 @@ if __name__ == '__main__':
     # Save and plot test_results
     get_test_results(nll_val=nll_val, result_path = result_dir + name, test_loader=test_loader,var_info=var_info)
 
+    evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None)
     # ### testing ###
     # logger.log("Training using {}".format(args.device))
     #

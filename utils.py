@@ -44,6 +44,36 @@ def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=
 
     return loss
 
+def evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None):
+    # EVALUATION
+    if model_best is None:
+        D = len(var_info.keys())
+        L = D
+        total_num_vals = 0
+        for var in var_info.keys():
+            total_num_vals += var_info[var]['num_vals']
+        model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M, natural=natural, device=device)
+        model_best.to(device)
+        # load best performing model
+        model_best.load_state_dict(torch.load(name+'.model'))
+
+    model_best.eval()
+    loss = 0.
+    N = 0.
+    for indx_batch, test_batch in enumerate(test_loader):
+        test_batch = test_batch.to(device)
+        loss_t = model_best.forward(test_batch, reduction='sum')
+        loss = loss + loss_t.item()
+        N = N + test_batch.shape[0]
+    loss = loss / N
+
+    if epoch is None:
+        print(f'FINAL LOSS: nll={loss}')
+    else:
+        print(f'Epoch: {epoch}, val nll={loss}')
+
+    return loss
+
 
 def samples_real(name, test_loader):
     # REAL-------
