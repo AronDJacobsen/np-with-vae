@@ -215,14 +215,13 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
         #    idx_range = (sum([var_info[i]['num_vals'] for i in range(var)]), var_info[var]['num_vals'])
         #    test_batch[observation,:][idx_range[0]:idx_range[0]+idx_range[1]]
 
-
-
         imputed_test_batch = imputed_test_batch.to(device)
 
         # with torch no grad
-        model_best.eval()
-        a = model(imputed_test_batch)
-        output = model_best.forward(imputed_test_batch, reduction='avg')['output']
-        loss = loss + loss_t.item()
-        N = N + test_batch.shape[0]
-    loss = loss / N    
+        #a = model(imputed_test_batch)
+        #output = model_best.forward(imputed_test_batch, reduction='avg')['output']
+        #loss = loss + loss_t.item()
+        #N = N + test_batch.shape[0]
+    #loss = loss / N    
+    return None
+    
