@@ -74,7 +74,7 @@ class Encoder(nn.Module):
             if (mu_e is None) or (log_var_e is None) or (z is None):
                 raise ValueError('mu, log-var and z can`t be None!')
 
-        return log_normal_diag(z, mu_e, log_var_e)
+        return log_normal(z, mu_e, log_var_e)
 
     # forward returns log probability
     def forward(self, x, type='log_prob'):
@@ -215,16 +215,12 @@ class Decoder(nn.Module):
                     natural_param = to_natural(prob_d[:, prob_d_idx:prob_d_idx+num_vals])
                     log_var = natural_param[:,1]
                     # log_var = torch.log(prob_d)
-                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx + 1], natural_param[:,0],
-                                                    log_var, reduction='sum', dim=-1).sum(-1)
+                    log_p[:, var] = log_normal(x[:, x_idx:x_idx + 1], natural_param[:,0],
+                                               log_var, reduction='sum', dim=-1).sum(-1)
                     prob_d_idx += num_vals
                 else:
-                    # don't know if reduction is correct
-                    #log_var = torch.log(prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,1])
-                    #mu = prob_d[:, prob_d_idx:prob_d_idx+num_vals][:,0]
-                    # log_var = torch.log(prob_d)
                     mu, log_var = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx+num_vals], 2, dim=1)
-                    log_p[:, var] = log_normal_diag(x[:, x_idx:x_idx+1], mu, log_var, reduction='sum', dim=-1).sum(-1)
+                    log_p[:, var] = log_normal(x[:, x_idx:x_idx+1], mu, log_var, reduction='sum', dim=-1).sum(-1)
                     prob_d_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'bernoulli':
@@ -419,11 +415,11 @@ class Baseline():
             x = data[:, attr]
 
             # Calculating MSE for numerical variables
-            mu, var = self.predictions['numerical'][attr]
+            mu, log_var = self.predictions['numerical'][attr]
             self.MSE[attr] = ((x-mu)**2).mean()
 
             # TODO: Should be exchanged for a normal (per variable (in prob dist))
-            log_normal_diag(data, mu, var.log(), reduction=None, dim=-1).sum(-1)
+            log_normal(data, mu, log_var, reduction=None, dim=-1).sum(-1)
 
     def plot_results(self, plotting = True):
 
