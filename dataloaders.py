@@ -9,9 +9,12 @@ from sklearn.preprocessing import LabelBinarizer
 
 def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
 
-
+    if dataset_name == 'bank':
+        sep = ';'
     # TODO: sep=';'??
-    data = pd.read_csv(f'datasets/{dataset_name}.csv')
+    else:
+        sep = ','
+    data = pd.read_csv(f'datasets/{dataset_name}.csv', sep=sep)
 
     # TODO: pre-process this instead?
     if dataset_name == 'avocado':
