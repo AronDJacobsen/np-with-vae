@@ -49,6 +49,7 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
 
         if e == 0:
             print('saved!')
+            logger.log('saved!')
             torch.save(model.state_dict(), save_path + 'best.ckpt')
 
             #torch.save(model.state_dict(), f"{save_path}/best.ckpt")
@@ -57,6 +58,7 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
         else:
             if loss_val < best_nll: # saving the best models
                 print('saved!')
+                logger.log('saved!')
                 torch.save(model.state_dict(), save_path + 'best.ckpt')
                 best_nll = loss_val
                 patience = 0
