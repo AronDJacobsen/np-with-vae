@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='avocado', choices=['boston', 'avocado', 'energy', 'bank'])
 
     # training
-    parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=500, type=int)
+    parser.add_argument('--max_epochs', help='"Number of epochs to train for"', default=5, type=int)
     parser.add_argument('--max_patience',
                         help='"If training does not improve for longer than --max_patience epochs, it is stopped"',
                         default=4, type=int)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     # print(f'training = {args.is_train}')
     # Training procedure
     if 'train' in args.mode:
-        nll_val = training(logger=logger.dir, save_path=result_dir, max_patience=args.max_patience,
+        nll_val = training(logger=logger, save_path=result_dir, max_patience=args.max_patience,
                            num_epochs=args.max_epochs,
                            model=model, optimizer=optimizer,
                            train_loader=train_loader, val_loader=val_loader, var_info=var_info, device=device)
