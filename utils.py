@@ -3,8 +3,28 @@ import matplotlib.pyplot as plt
 import torch
 from models import VAE
 
-def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=256, D=256, natural=False,device=None):
+
+def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device):
+
+    if model_name == 'VAE':
+        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device)
+    elif model_name == 'BASELINE':
+        return 'implement baseline here'
+    else:
+        raise NotImplementedError("Specified model is currently not implemented.")
+
+def load_model(model_path, model):
+    state_dict = torch.load(model_path + 'best.ckpt')
+    model.load_state_dict(state_dict)
+    model.eval()
+    return model
+
+
+#def evaluation(test_loader, var_info, model, model_best=None, epoch=None, M=256,natural=False,device=None):
+def evaluation(model, data_loader, device):
+
     # EVALUATION
+    '''
     if model_best is None:
         D = D
         L = len(var_info.keys())
@@ -15,13 +35,15 @@ def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=
         model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M, natural=natural, device=device)
         model_best.to(device)
         # load best performing model
-        model_best.load_state_dict(torch.load(name+'.model'))
+        model_best.load_state_dict(torch.load(model_path + model_name + '.model'))
 
     model_best.eval()
+    '''
+
     loss = 0.
     N = 0.
-    for indx_batch, test_batch in enumerate(test_loader):
-        test_batch = test_batch.to(device)
+    for indx_batch, batch in enumerate(data_loader):
+        batch = batch.to(device)
         #test_batch = torch.stack(test_batch[1]).float() # TODO: To access only one attribute - only needed as long as no multi-head
         # TODO: adjust to normal batch
         #numerical = test_batch[0].float()
@@ -33,20 +55,23 @@ def evaluation(test_loader, var_info, name=None, model_best=None, epoch=None, M=
 
         # test_batch = test_batch[1]
         # TODO: this was also implemented in train.training and utils.samples_generated
-        loss_t = model_best.forward(test_batch, reduction='sum')
+        loss_t = model.forward(batch, reduction='sum')
         loss = loss + loss_t.item()
-        N = N + test_batch.shape[0]
+        N = N + batch.shape[0]
     loss = loss / N
 
-    if epoch is None:
-        print(f'FINAL LOSS: nll={loss}')
-    else:
-        print(f'Epoch: {epoch}, val nll={loss}')
+    #if epoch is None:
+    #    print(f'FINAL LOSS: nll={loss}')
+    #else:
+    #    print(f'Epoch: {epoch}, val nll={loss}')
 
     return loss
 
-def evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None):
+#def evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None):
+def evaluate_to_table(model, data_loader, device):
+
     # EVALUATION
+    '''
     if model_best is None:
         D = len(var_info.keys())
         L = D
@@ -59,21 +84,25 @@ def evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=N
         model_best.load_state_dict(torch.load(name+'.model'))
 
     model_best.eval()
+    '''
+
     loss = 0.
     N = 0.
-    for indx_batch, test_batch in enumerate(test_loader):
-        test_batch = test_batch.to(device)
-        loss_t = model_best.forward(test_batch, reduction='sum')
+    for indx_batch, batch in enumerate(data_loader):
+        batch = batch.to(device)
+        loss_t = model.forward(batch, reduction='sum')
         loss = loss + loss_t.item()
-        N = N + test_batch.shape[0]
+        N = N + batch.shape[0]
     loss = loss / N
 
+    '''
     if epoch is None:
         print(f'FINAL LOSS: nll={loss}')
     else:
         print(f'Epoch: {epoch}, val nll={loss}')
+    '''
 
-    return loss
+    return loss # + mse? (NLL, MSE)
 
 
 def samples_real(name, test_loader):
@@ -94,7 +123,7 @@ def samples_real(name, test_loader):
 
 
 def samples_generated(save_path, name, data_loader, extra_name=''):
-    # TODO: originally: 
+    # TODO: originally:
     # x = next(iter(data_loader)).detach().numpy()
     #x = torch.stack(next(iter(data_loader))[1]).float().detach().numpy()
     x = next(iter(data_loader))[1]
@@ -122,20 +151,27 @@ def samples_generated(save_path, name, data_loader, extra_name=''):
     plt.close()
 
 
-def plot_curve(name, nll_val):
-    plt.plot(np.arange(len(nll_val)), nll_val, linewidth='3')
+def plot_curve(name):#, nll_val):
+    #plt.plot(np.arange(len(nll_val)), nll_val, linewidth='3')
     plt.xlabel('epochs')
     plt.ylabel('nll')
     plt.savefig(name + '_nll_val_curve.pdf', bbox_inches='tight')
     plt.show()
     plt.close()
 
-def get_test_results(nll_val, result_path, test_loader,var_info, D=256, natural=None, device=None):
-    test_loss = evaluation(test_loader, var_info, name=result_path, D=D, natural=natural,device=device)
-    f = open(result_path + '_test_loss.txt', "w")
+
+#def get_test_results(nll_val, result_path, test_loader,var_info, D=256, natural=None, device=None):
+#    test_loss = evaluation(test_loader, var_info, name=result_path, D=D, natural=natural,device=device)
+#    f = open(result_path + '_test_loss.txt', "w")
+
+def get_test_results(model, result_path, model_name, test_loader, var_info, device):
+    # loading best model
+    model = load_model(model_path=result_path, model=model)
+    test_loss = evaluation(model, test_loader, device)
+    f = open(result_path + 'test_loss.txt', "w")
     f.write(str(test_loss))
     f.close()
 
     # samples_real(result_path, test_loader)
 
-    plot_curve(result_path, nll_val)
+    plot_curve(result_path) #, nll_val)
