@@ -88,14 +88,18 @@ def dataset_info_restructure(dataset_name, data):
             inv_var_dtype[x] = k
     # finding number of values per variable
     var_info = {}
-
+    offset = 0
     for idx, variable_name in enumerate(list(data.columns)):
         if inv_var_dtype[idx] == 'categorical':
            new_columns = pd.get_dummies(data[variable_name])
            new_columns_names = list(variable_name + '_' + new_columns.columns.astype('str'))
-           data[new_columns_names] = new_columns
+           for i, name in enumerate(new_columns_names):
+               data.insert(loc=idx+i+1+offset, column=name, value=new_columns.iloc[:,i])
+        #    data[new_columns_names] = new_columns
            num_unique = len(new_columns_names) # num unique values
            # dropping original dataframe
+           offset += num_unique
+           offset -= 1
            data.drop(columns=variable_name, inplace=True)
            var_info[idx] = {'name': variable_name, 'dtype': 'categorical', 'num_vals': num_unique}
 
