@@ -472,7 +472,7 @@ if __name__ == '__main__':
     normal = Normal()
     params = (torch.tensor(3), torch.tensor(1))
     eta1, eta2 = normal.to_naturals(params)
-    print(normal.sample(2, (eta1,eta2)))
+    #print(normal.sample(2, (eta1,eta2)))
 
 
 

@@ -108,7 +108,7 @@ class Decoder(nn.Module):
         # hidden output of decoder
         idx = 0
         # decoder outputs the distribution parameters (e.g. mu, sigma, eta's)
-        #if not self.natural:
+        # if not self.natural:
 
         for var in self.var_info:
             if self.var_info[var]['dtype'] == 'categorical':
@@ -128,14 +128,13 @@ class Decoder(nn.Module):
                 else:
                     # eta2 have to be negative -inf<eta2<0
                     # extracting eta2
-                    prob_d[:, idx+1:idx + num_vals] = -self.softplus(h_d[:, idx+1:idx + num_vals])
+                    prob_d[:, idx:idx + 1] = -self.softplus(h_d[:, idx:idx + 1])
                 idx += num_vals
             else:
                 raise ValueError('Either `categorical` or `gaussian`')
 
         # returning probability distribution or returning the etas
         return prob_d
-
 
     def sample(self, z):
         # TODO: cannot do flatten if z is batched
@@ -179,6 +178,10 @@ class Decoder(nn.Module):
                 # we want one sample per number of possible values (e.g. pixel values)
 
                 mu, log_var = torch.chunk(output[:, output_idx:output_idx + num_vals], 2, dim=1)
+
+                mu_orig, std_orig = self.var_info[var]['normalize']
+                # overwrite
+                mu, log_var = denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var)
                 # Extracting mu and std. values.
                 # mu = torch.tensor([output[:, var_index]]) # The mu's extracted from the output
                 std = torch.exp(
@@ -204,7 +207,8 @@ class Decoder(nn.Module):
         prob_d = prob_d.to(self.device)
         log_p = torch.zeros((len(prob_d), len(self.var_info)))
         prob_d_idx = 0
-        for x_idx, var in enumerate(self.var_info):
+        x_idx = 0
+        for _, var in enumerate(self.var_info):
             if self.var_info[var]['dtype'] == 'categorical':
                 num_vals = self.var_info[var]['num_vals']
 
@@ -213,12 +217,13 @@ class Decoder(nn.Module):
                 else:
                     probs = prob_d[:, prob_d_idx:prob_d_idx + num_vals]
 
-                log_p[:, var] = log_categorical(x[:, prob_d_idx:prob_d_idx + num_vals], probs, reduction='sum', dim=1)#.sum(-1)
+                log_p[:, var] = log_categorical(x[:, x_idx:x_idx + num_vals], probs, reduction='sum', dim=1)  # .sum(-1)
 
                 prob_d_idx += num_vals
+                x_idx += num_vals
 
             elif self.var_info[var]['dtype'] == 'numerical':  # Gaussian
-                num_vals = self.var_info[var]['num_vals'] # always 2
+                num_vals = self.var_info[var]['num_vals']  # always 2
 
                 if self.natural:
                     # -*softplus has been applied to softplus
@@ -227,18 +232,20 @@ class Decoder(nn.Module):
                     mu, log_var = -0.5 * eta1 / eta2, torch.log(-0.5 / eta2)
                 else:
                     mu, log_var = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx + num_vals], 2, dim=1)
-                log_p[:, var] = log_normal(x[:, prob_d_idx:prob_d_idx + num_vals], mu, log_var, reduction='sum', dim=-1) #.sum(-1)
-                prob_d_idx += 1
 
-            elif self.var_info[var]['dtype'] == 'bernoulli':
-                log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)
+                # denormalizing
+                # mu = torch.tanh(mu)
+                mu_orig, std_orig = self.var_info[var]['normalize']
+                mu, log_var = denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var)
+                log_p[:, var] = log_normal(x[:, x_idx:x_idx + 1], mu, log_var, reduction='sum', dim=1)
+                prob_d_idx += num_vals
+                x_idx += 1
 
             else:
-                raise ValueError('Either `gaussian`, `categorical`, or `bernoulli`')
+                raise ValueError('Either `gaussian`, `categorical`')
         # summing log_p for each variable (i.e. we have on log prob per batch)
         #   - e.g. all categories in categorical, i.e. dimension is batch
         return torch.sum(log_p, axis=1).to(self.device)
-
 
     def forward(self, z, x=None, type='log_prob'):
         assert type in ['decoder', 'log_prob'], 'Type could be either decode or log_prob'
@@ -261,6 +268,41 @@ class Prior(nn.Module):
         return log_standard_normal(z)
 
 
+def normalize_numerical(var_info, data, D):
+    new_data = torch.zeros((len(data), D))
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            mean, std = var_info[var]['normalize']
+            new_data[:, idx] = (data[:, idx] - mean) / std
+            idx += 1
+        else:
+            idx += num_vals
+        # ignoring categorical
+    return new_data
+
+
+def denormalize_numerical_sample(var_info, data):
+    new_data = torch.zeros((len(data), len(var_info)))
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            mean, std = var_info[var]['normalize']
+            new_data[:, idx:idx] = (data[:, idx:idx] * std) + mean
+        # ignoring categorical
+        idx += num_vals
+    return new_data
+
+
+def denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var):
+    new_mu = mu * std_orig + mu_orig
+    std = torch.sqrt(torch.exp(log_var))
+    new_log_var = torch.log((std * std_orig) ** 2)
+    return new_mu, new_log_var
+
+
 class VAE(nn.Module):
     def __init__(self, total_num_vals, L, var_info, D, M, natural, device):
         super().__init__()
@@ -275,34 +317,23 @@ class VAE(nn.Module):
 
         encoder_net.to(device)
         decoder_net.to(device)
-
         self.encoder = Encoder(encoder_net=encoder_net)
-
-        # TODO: num_vals should be changed according to the num_classes in said feature --> i.e. multiple encoder/decoders per attribute (multi-head)
         self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,
                                natural=natural, device=device)
 
-        # self.heads = nn.ModuleList([
-        #    HIVAEHead(dist, hparams.size_s, hparams.size_z, hparams.size_y) for dist in prob_model
-        # ])
-
         self.prior = Prior(L=L)
-
         self.total_num_vals = total_num_vals
-
         self.var_info = var_info  # contains type of likelihood for variables
-
         self.D = D
-
         self.device = device
+        # todo: self.normalizing stuff
 
     def forward(self, x, loss=True, reconstruct=False, nll=False, reduction='sum'):
-
-        #if reduction == 'sum':
+        # if reduction == 'sum':
         #    metric = SumMetric()
-        #elif reduction == 'avg':
+        # elif reduction == 'avg':
         #    metric = MeanMetric()
-        #else:
+        # else:
         #    raise NotImplementedError('unknown recuction')
 
         # Initializing outputs
@@ -310,8 +341,9 @@ class VAE(nn.Module):
         LOSS = None
         NLL = None
 
+        x_norm = normalize_numerical(self.var_info, x, self.D)
         # Encode
-        mu_e, log_var_e = self.encoder.encode(x)
+        mu_e, log_var_e = self.encoder.encode(x_norm)
         # sample in latent space
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
         z = z.to(self.device)
@@ -321,17 +353,16 @@ class VAE(nn.Module):
             # Sample/predict
             RECONSTRUCTION = self.decoder.sample(z)
             # updated
-            #reconstruction_dict = {'reconstruction': output}
 
         if loss:
             # ELBO
             # reconstruction error
             RE = self.decoder.log_prob(x, z)  # z is decoded back
             # Kullback–Leibler divergence, regularizer
-            KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
+            KL = torch.sum((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),
+                           axis=1)
             # summing the loss for this batch
             LOSS = -(RE + KL).sum()
-            #loss_dict = {'loss': -(RE + KL).sum()}
 
         if nll:
             assert (nll and loss) == True, 'loss also has to be true in input for forward call'
@@ -339,9 +370,7 @@ class VAE(nn.Module):
             # first find NLL averaged over variables in data
             # then mean the batch
             # updated
-            NLL = (RE / self.D).mean().detach()
-            #nll_dict = {'NLL': (RE / self.D).mean().detach()} #, 'RMSE': rmse}
-
+            NLL = (-RE / self.D).mean().detach()
 
         return RECONSTRUCTION, LOSS, NLL
 

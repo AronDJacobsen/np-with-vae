@@ -81,8 +81,8 @@ if __name__ == '__main__':
     for var in var_info.keys():
         total_num_vals += var_info[var]['num_vals']
         # categorical input dimension is one-hot thus num_vals is input
-        if var in var_dtype['categorical']:  # todo and num_vals
-            D += var_info[var]['num_vals']
+        if var in var_dtype['categorical']:
+            D += var_info[var]['num_vals'] # number of categories
         # numerical just har input dim of 1
         else:
             D += 1
@@ -105,11 +105,13 @@ if __name__ == '__main__':
     # todo: what if baseline?
 
     if 'train' in args.mode:
+        torch.autograd.set_detect_anomaly(True)
+
         nll_val = training(logger=logger, save_path=result_dir, max_patience=args.max_patience,
                            num_epochs=args.max_epochs,
                            model=model, optimizer=optimizer,
                            train_loader=train_loader, val_loader=val_loader, var_info=var_info, device=device)
-        print(nll_val)
+        #print(nll_val)
         # nll_val = [0]
     if 'test' in args.mode:
         # Save and plot test_results

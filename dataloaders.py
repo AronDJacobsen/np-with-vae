@@ -32,14 +32,19 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
 
     # normalize training data (similar to Ma et al.), however only the numerical columns
-    #    - TODO: then use sigmoid activation function?
-    #    - TODO: not normalizing categorical values
-    numeric_columns = [columns[idx] for idx in var_dtype['numeric']]
-    train_mean = train_data[numeric_columns].mean()
-    train_std = train_data[numeric_columns].std()
-    train_data[numeric_columns] = (train_data[numeric_columns] - train_mean) / (train_std)
-    val_data[numeric_columns] = (val_data[numeric_columns] - train_mean) / (train_std)
-    test_data[numeric_columns] = (test_data[numeric_columns] - train_mean) / (train_std)
+    reference_idx = 0 # for reference in dataframe
+    for idx in var_info.keys():
+        if var_info[idx]['dtype'] == 'numerical':
+            mean = train_data[var_info[idx]['name']].mean()
+            std = train_data[var_info[idx]['name']].std()
+            var_info[idx]['normalize'] = (mean, std)
+        reference_idx += var_info[idx]['num_vals']
+    #train_mean = train_data[numeric_columns].mean()
+    #train_std = train_data[numeric_columns].std()
+
+    #train_data[numeric_columns] = (train_data[numeric_columns] - train_mean) / (train_std)
+    #val_data[numeric_columns] = (val_data[numeric_columns] - train_mean) / (train_std)
+    #test_data[numeric_columns] = (test_data[numeric_columns] - train_mean) / (train_std)
     #
     # train_min = train_data[numeric_columns].min()
     # train_max = train_data[numeric_columns].max()
@@ -48,7 +53,7 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     # test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max-train_min)
 
     # dump pickle
-    dump_pickle(train_mean, train_std, dataset_name)
+    #dump_pickle(train_mean, train_std, dataset_name)
 
     # create a data class with __getitem__, i.e. iterable
     train_data = iterate_data(train_data)
