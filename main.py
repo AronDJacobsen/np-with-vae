@@ -122,18 +122,5 @@ if __name__ == '__main__':
         # evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256, natural=False,
         #                  device=None)
 
-    # ### testing ###
-    # logger.log("Training using {}".format(args.device))
-    #
-    # name = "Train"
-    # for j in range(10):
-    #     scalars = {}
-    #     t = np.linspace(0, np.pi, 7)
-    #     y = lambda t: np.cos(t)+j
-    #     for i in t:
-    #         scalars[i] = y(i)
-    #
-    #     logger.write_to_board(name=name, scalars=scalars, index=j)
-
 
 
