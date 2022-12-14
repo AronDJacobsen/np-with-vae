@@ -33,12 +33,12 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     # normalize training data (similar to Ma et al.), however only the numerical columns
     #    - TODO: then use sigmoid activation function?
     #    - TODO: not normalizing categorical values
-    # numeric_columns = [columns[idx] for idx in var_dtype['numeric']]
-    # train_min = train_data[numeric_columns].min()
-    # train_max = train_data[numeric_columns].max()
-    # train_data[numeric_columns] = (train_data[numeric_columns] - train_min) / (train_max - train_min)
-    # val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max - train_min)
-    # test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max - train_min)
+    numeric_columns = [columns[idx] for idx in var_dtype['numeric']]
+    train_min = train_data[numeric_columns].min()
+    train_max = train_data[numeric_columns].max()
+    train_data[numeric_columns] = (train_data[numeric_columns] - train_min) / (train_max - train_min)
+    val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max - train_min)
+    test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max - train_min)
 
 
     # create a data class with __getitem__, i.e. iterable
