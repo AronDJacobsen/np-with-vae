@@ -179,18 +179,20 @@ def get_test_results(model, result_path, model_name, test_loader, var_info, devi
 
     plot_curve(result_path)  # , nll_val)
 
-    imputation_error = imputation_score(test_loader, var_info, model, name=result_path, device=device,
-                                        imputation_ratio=0.5)
+    imputation_error = imputation_score(test_loader, var_info, model, name=result_path, device=device, imputation_ratio=0.5)
 
 # Imputation RMSE per numerical, categorical, both --> as well as imputation NLL
 
 def imputation_score(test_loader, var_info, model, name=None, device=None, imputation_ratio=0.5):
     model.eval()
 
-    RMSE = [] # Initializing RMSE score
+    RMSE = {'regular': [], 'numerical': [], 'categorical': []} # Initializing RMSE score
+    NLL = {'regular': [], 'numerical': [], 'categorical': []} # Initializing NLL score
 
     # Num variables
     D = len(var_info.keys())
+    num_numerical = sum([var_info[var]['dtype']=='numerical' for var in var_info.keys()])
+    num_categorical = D - num_numerical
 
     # Looping through batches
     for indx_batch, test_batch in enumerate(test_loader):
@@ -232,7 +234,7 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
         reconstructed_test_batch = model.forward(imputed_test_batch)[0]['output'].detach().numpy()
 
         var_idx = 0
-        MSE = 0
+        MSE = {'regular': 0, 'numerical': 0, 'categorical': 0} # Initializing RMSE score
         for var in var_info.keys():
             num_vals = var_info[var]['num_vals']
 
@@ -252,7 +254,9 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
             MSE_var = torch.sum((imputation_targets - imputation_preds) ** 2) / Nd
             
             # Summing variable MSEs - (outer-most sum of formula)
-            MSE += MSE_var 
+            MSE['regular'] += MSE_var 
+            # Also adding to variable type MSE
+            MSE[var_info[var]['dtype']] += MSE_var
                 
             # Updating current variable index
             if var_info[var]['dtype'] == 'numerical':
@@ -261,6 +265,7 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
                 var_idx += num_vals
 
         # Taking square-root (RMSE), and averaging over features. (As seen in formula)
-        RMSE.append(torch.sqrt(MSE) / D)
+        [RMSE[dtype].append(torch.sqrt(MSE[dtype]).item() / type_count) for (dtype, type_count) in {'regular': D, 'numerical': num_numerical, 'categorical': num_categorical}.items()]
+        RMSE['numerical'][-1], RMSE['categorical'][-1] = [RMSE['regular'][-1] * (RMSE[dtype][-1] / (RMSE['numerical'][-1] + RMSE['categorical'][-1])) for dtype in ['numerical', 'categorical']]
 
     return RMSE
