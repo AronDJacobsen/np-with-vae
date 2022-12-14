@@ -108,31 +108,38 @@ class Decoder(nn.Module):
         # hidden output of decoder
         idx = 0
         # decoder outputs the distribution parameters (e.g. mu, sigma, eta's)
-        if not self.natural:
-            for var in self.var_info:
-                if self.var_info[var]['dtype'] == 'categorical':
-                    num_vals = self.var_info[var]['num_vals']
+        #if not self.natural:
+
+        for var in self.var_info:
+            if self.var_info[var]['dtype'] == 'categorical':
+                num_vals = self.var_info[var]['num_vals']
+                # if not naturals
+                if not self.natural:
                     prob_d[:, idx:idx + num_vals] = self.softmax(h_d[:, idx:idx + num_vals])
 
-                    idx += num_vals
-                elif self.var_info[var]['dtype'] == 'numerical':
-                    # TODO: apply sigmoid activate? since data is normalized [0,1] then mu and sigma can't exceed 0 and 1?
-                    # gaussian always outputs two values
-                    num_vals = 2
+                idx += num_vals
+            elif self.var_info[var]['dtype'] == 'numerical':
+                # gaussian always outputs two values
+                num_vals = 2
+                # if not naturals
+                if not self.natural:
                     # normal distribution, mu and sigma returned
                     prob_d[:, idx:idx + num_vals] = h_d[:, idx:idx + num_vals]
-                    idx += num_vals
                 else:
-                    raise ValueError('Either `categorical` or `gaussian`')
+                    # eta2 have to be negative -inf<eta2<0
+                    # extracting eta2
+                    eta2 = h_d[:, idx+1:idx + num_vals]
+                    # todo is this correct?
+                    h_d[:, idx + 1:idx + num_vals] = -self.softplus(eta2)
+                idx += num_vals
+            else:
+                raise ValueError('Either `categorical` or `gaussian`')
+        # returning output
+        if not self.natural:
             # returning probability distribution
             return prob_d
-
         else:
-            # todo: softplus for eta2???
-            # simply return the real numbers if naturals
-            for x_idx, var in enumerate(self.var_info):
-                if self.var_info[var]['dtype'] == 'numerical':
-                    eta2 = -torch.nn.Softplus()(eta2)
+            # returning the etas
             return h_d
 
     def sample(self, z):
@@ -207,7 +214,7 @@ class Decoder(nn.Module):
                 num_vals = self.var_info[var]['num_vals']
 
                 if self.natural:  # note that outputs are just logits of probability
-                    probs = torch.softmax(prob_d[:, prob_d_idx:prob_d_idx + num_vals], axis=1)
+                    probs = self.softmax(prob_d[:, prob_d_idx:prob_d_idx + num_vals])
                 else:
                     probs = prob_d[:, prob_d_idx:prob_d_idx + num_vals]
 
@@ -220,9 +227,9 @@ class Decoder(nn.Module):
                 num_vals = self.var_info[var]['num_vals']
 
                 if self.natural:
+                    # -*softplus has been applied to softplus
                     eta1, eta2 = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx + num_vals], 2, dim=1)
                     # restricting eta2 to be -inf < eta2 < 0
-                    eta2 = -torch.nn.Softplus()(eta2)
                     mu, log_var = -0.5 * eta1 / eta2, torch.log(-0.5 / eta2)
                 else:
                     mu, log_var = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx + num_vals], 2, dim=1)
