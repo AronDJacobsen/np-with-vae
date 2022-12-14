@@ -1,15 +1,9 @@
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from sklearn.datasets import load_digits
-from sklearn import datasets
 import torch.nn as nn
 import torch.nn.functional as F
 from prob_dists import *
-from torchmetrics import SumMetric, MeanMetric
-
-from pytorch_model_summary import summary
 
 # importing distributions
 import torch.distributions as dists
@@ -219,7 +213,7 @@ class Decoder(nn.Module):
                 else:
                     probs = prob_d[:, prob_d_idx:prob_d_idx + num_vals]
 
-                log_p[:, var] = log_categorical(x[:, x_idx:x_idx + num_vals], probs, reduction='sum', dim=1)#.sum(-1)
+                log_p[:, var] = log_categorical(x[:, prob_d_idx:prob_d_idx + num_vals], probs, reduction='sum', dim=1)#.sum(-1)
 
                 prob_d_idx += num_vals
 
@@ -233,8 +227,8 @@ class Decoder(nn.Module):
                     mu, log_var = -0.5 * eta1 / eta2, torch.log(-0.5 / eta2)
                 else:
                     mu, log_var = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx + num_vals], 2, dim=1)
-                log_p[:, var] = log_normal(x[:, x_idx:x_idx + 1], mu, log_var, reduction='sum', dim=-1) #.sum(-1)
-                prob_d_idx += num_vals
+                log_p[:, var] = log_normal(x[:, prob_d_idx:prob_d_idx + num_vals], mu, log_var, reduction='sum', dim=-1) #.sum(-1)
+                prob_d_idx += 1
 
             elif self.var_info[var]['dtype'] == 'bernoulli':
                 log_p = log_bernoulli(x, prob_d, reduction='sum', dim=-1)

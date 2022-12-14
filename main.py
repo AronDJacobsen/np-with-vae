@@ -1,3 +1,4 @@
+import os
 import argparse
 from logger import Logger
 import numpy as np
@@ -118,4 +119,3 @@ if __name__ == '__main__':
         imputation_ratio=0.5 # todo extend to arguments?
         results_df = get_test_results(model=model, test_loader=test_loader, var_info=var_info, device=device, imputation_ratio=imputation_ratio)
         print(results_df)
-
