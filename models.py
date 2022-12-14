@@ -316,9 +316,6 @@ class VAE(nn.Module):
         # Kullback–Leibler divergence, regularizer
         KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
         # loss
-
-        # model_output = self.decoder.sample(z)
-
         nll = (RE / self.total_num_vals).mean().detach()
         MSE = nn.MSELoss()
         rmse = -1  # TODO: torch.sqrt(MSE(model_output, x))
@@ -328,6 +325,49 @@ class VAE(nn.Module):
         # meaning
         elif reduction == 'avg':
             return {'output': output}, {'loss': -(RE + KL).mean()}, {'NLL': nll, 'RMSE': rmse}
+
+    """ def RMSE(self, ):
+
+    def RMSE(test_loader, var_info, model):
+    model.eval()
+
+    RMSE = 0 # Initializing RMSE score
+
+    # Num variables
+    D = len(var_info.keys())
+
+    # Getting the reconstructed test_batch by sending the imputed test batch through VAE
+    x_recon = model.forward(x)[0]['output'].detach().numpy()
+
+    var_idx = 0
+    MSE = 0
+    for var in var_info.keys():
+        num_vals = var_info[var]['num_vals']
+
+        # Getting length of slice
+        if var_info[var]['dtype'] == 'numerical':
+            idx_slice = 1
+        else:  # categorical
+            idx_slice = num_vals
+
+        # MSE per variable - for all unobserved slots (inner-most sum of formula)
+        MSE_var = torch.mean((x - x_recon) ** 2)
+        
+        # Summing variable MSEs - (outer-most sum of formula)
+        MSE += MSE_var 
+            
+        # Updating current variable index
+        if var_info[var]['dtype'] == 'numerical':
+            var_idx += 1
+        else:  # categorical              
+            var_idx += num_vals
+
+    # Taking square-root (RMSE), and averaging over features. (As seen in formula)
+    RMSE += torch.sqrt(MSE) / D
+
+    # Getting average RMSE across batches
+    total_batches = indx_batch + 1
+    return RMSE / total_batches 
 
 
     def nLLloss(self, x, y_true):
@@ -356,6 +396,7 @@ class VAE(nn.Module):
     def sample(self, batch_size=64):
         z = self.prior.sample(batch_size=batch_size)
         return self.decoder.sample(z)
+        """
 
 
 class Baseline():
