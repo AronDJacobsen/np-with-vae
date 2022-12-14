@@ -95,6 +95,8 @@ class Decoder(nn.Module):
         self.total_num_vals = total_num_vals  # depends on num_classes of each attribute
         self.natural = natural
         self.device = device
+        self.softmax = torch.nn.Softmax(dim=1)
+        self.softplus = torch.nn.Softplus()
         # self.distribution = 'gaussian'
 
     def decode(self, z):
@@ -110,21 +112,27 @@ class Decoder(nn.Module):
             for var in self.var_info:
                 if self.var_info[var]['dtype'] == 'categorical':
                     num_vals = self.var_info[var]['num_vals']
-                    prob_d[:, idx:idx + num_vals] = torch.softmax(h_d[:, idx:idx + num_vals], axis=1)
+                    prob_d[:, idx:idx + num_vals] = self.softmax(h_d[:, idx:idx + num_vals])
+
                     idx += num_vals
                 elif self.var_info[var]['dtype'] == 'numerical':
                     # TODO: apply sigmoid activate? since data is normalized [0,1] then mu and sigma can't exceed 0 and 1?
                     # gaussian always outputs two values
                     num_vals = 2
                     # normal distribution, mu and sigma returned
-                    prob_d[:, idx:idx + num_vals] = h_d[:,
-                                                    idx:idx + num_vals]  # torch.sigmoid(h_d[:, idx:idx+num_vals])
+                    prob_d[:, idx:idx + num_vals] = h_d[:, idx:idx + num_vals]
                     idx += num_vals
                 else:
                     raise ValueError('Either `categorical` or `gaussian`')
+            # returning probability distribution
+            return prob_d
 
         else:
+            # todo: softplus for eta2???
             # simply return the real numbers if naturals
+            for x_idx, var in enumerate(self.var_info):
+                if self.var_info[var]['dtype'] == 'numerical':
+                    eta2 = -torch.nn.Softplus()(eta2)
             return h_d
 
     def sample(self, z):
@@ -283,15 +291,18 @@ class VAE(nn.Module):
 
         self.device = device
 
-    def forward(self, x, reduction='avg'):  # todo reduction
-        # encoder
+    def forward(self, x, reduction='sum'):
+        # Encode
         mu_e, log_var_e = self.encoder.encode(x)
+        # sample in latent space
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
         z = z.to(self.device)
+        # Sample/predict
         output = self.decoder.sample(z)
 
         # x_params = [head(y_shared, s_samples) for head in self.heads]
 
+        # Loss
         # ELBO
         # reconstruction error
         RE = self.decoder.log_prob(x, z)  # z is decoded back
@@ -301,15 +312,16 @@ class VAE(nn.Module):
 
         # model_output = self.decoder.sample(z)
 
-        # NLL = nn.NLLLoss()
         nll = (RE / self.total_num_vals).mean().detach()
         MSE = nn.MSELoss()
         rmse = -1  # TODO: torch.sqrt(MSE(model_output, x))
-
+        # returning the output, the loss and
         if reduction == 'sum':
-            return {'output': z}, {'loss': -(RE + KL).sum()}, {'NLL': nll, 'RMSE': rmse}
-        else:
-            return {'output': z}, {'loss': -(RE + KL).mean()}, {'NLL': nll, 'RMSE': rmse}
+            return {'output': output}, {'loss': -(RE + KL).sum()}, {'NLL': nll, 'RMSE': rmse}
+        # meaning
+        elif reduction == 'avg':
+            return {'output': output}, {'loss': -(RE + KL).mean()}, {'NLL': nll, 'RMSE': rmse}
+
 
     def nLLloss(self, x, y_true):
         mu_e, log_var_e = self.encoder.encode(x)

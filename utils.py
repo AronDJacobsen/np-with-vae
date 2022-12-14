@@ -170,7 +170,7 @@ def get_test_results(model, result_path, model_name, test_loader, var_info, devi
     # loading best model
 
     model = load_model(model_path=result_path, model=model, device=device)
-    test_loss, performance_df = evaluation(model, test_loader, device)
+    test_loss, performance_df = evaluation(model, test_loader, device, reduction='avg')
     f = open(result_path + 'test_loss.txt', "w")
     f.write(str(test_loss))
     f.close()
