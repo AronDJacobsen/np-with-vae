@@ -305,6 +305,10 @@ class VAE(nn.Module):
         #else:
         #    raise NotImplementedError('unknown recuction')
 
+        # Initializing outputs
+        RECONSTRUCTION = None
+        LOSS = None
+        NLL = None
 
         # Encode
         mu_e, log_var_e = self.encoder.encode(x)
@@ -313,14 +317,12 @@ class VAE(nn.Module):
         z = z.to(self.device)
 
         # reconstruct
-        RECONSTRUCTION = None
         if reconstruct:
             # Sample/predict
             RECONSTRUCTION = self.decoder.sample(z)
             # updated
             #reconstruction_dict = {'reconstruction': output}
 
-        LOSS = None
         if loss:
             # ELBO
             # reconstruction error
@@ -331,7 +333,6 @@ class VAE(nn.Module):
             LOSS = -(RE + KL).sum()
             #loss_dict = {'loss': -(RE + KL).sum()}
 
-        NLL = None
         if nll:
             assert (nll and loss) == True, 'loss also has to be true in input for forward call'
             # loss

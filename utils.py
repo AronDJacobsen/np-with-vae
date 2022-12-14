@@ -168,10 +168,16 @@ def plot_curve(name):  # , nll_val):
 
 def calculate_RMSE(var_info, x, x_recon):
     var_idx = 0
-    MSE = 0
-    RMSE = 0
-    D = len(var_info.keys())  # Num variables
-    obs_in_batch = x.shape[0]  # Num observations in batch
+    MSE = {'regular': 0, 'numerical': 0, 'categorical': 0}  # Initializing RMSE score
+    RMSE = {}
+
+    # Number of variable-types
+    D = len(var_info.keys())
+    num_numerical = sum([var_info[var]['dtype'] == 'numerical' for var in var_info.keys()])
+    num_categorical = D - num_numerical
+    
+    # Num observations in batch
+    obs_in_batch = x.shape[0] 
     for var in var_info.keys():
         num_vals = var_info[var]['num_vals']
 
@@ -189,7 +195,11 @@ def calculate_RMSE(var_info, x, x_recon):
         MSE_var = torch.sum((var_targets - var_preds) ** 2) / obs_in_batch
 
         # Summing variable MSEs - (outer-most sum of formula)
-        MSE += MSE_var
+        #MSE += MSE_var
+        # Summing variable MSEs - (outer-most sum of formula)
+        MSE['regular'] += MSE_var
+        # Also adding to variable type MSE
+        MSE[var_info[var]['dtype']] += MSE_var
 
         # Updating current variable index
         if var_info[var]['dtype'] == 'numerical':
@@ -198,51 +208,25 @@ def calculate_RMSE(var_info, x, x_recon):
             var_idx += num_vals
 
     # Taking square-root (RMSE), and averaging over features. (As seen in formula)
-    RMSE += torch.sqrt(MSE) / D
+    for (dtype, type_count) in {'regular': D, 'numerical': num_numerical, 'categorical': num_categorical}.items():
+        RMSE[dtype] = torch.sqrt(MSE[dtype]).item() / type_count
+
+    # Updating numerical and categorical RMSE to represent an accurate ratio of Regular RMSE - that sums to regular. 
+    RMSE['numerical'], RMSE['categorical'] = [RMSE['regular'] * (RMSE[dtype] / (RMSE['numerical'] + RMSE['categorical'])) for dtype in ['numerical', 'categorical']]    
 
     return RMSE
 
 def calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio):
 
-    # Num variables
+    # Number of variable-types
     D = len(var_info.keys())
-    num_numerical = sum([var_info[var]['dtype']=='numerical' for var in var_info.keys()])
+    num_numerical = sum([var_info[var]['dtype'] == 'numerical' for var in var_info.keys()])
     num_categorical = D - num_numerical
 
-    # Imputation RMSE per numerical, categorical, both --> as well as imputation NLL
-    imputation_RMSE = {} #{'regular': 0, 'numerical': 0, 'categorical': 0} # Initializing RMSE score
+    imputation_RMSE = {} # Initializing RMSE score
 
-    # todo nll
-    NLL = {'regular': [], 'numerical': [], 'categorical': []} # Initializing NLL score
-    # IMPUTATION ERROR
-    # Initializing imputation mask
-    imputation_mask = np.ones(test_batch.shape)
-
-    # Looping over observations
-    for obs_idx, observation in enumerate(test_batch):
-
-        # Random draw of variables to set zero - based on imputation ratio
-        imputation_variables = np.random.choice(list(var_info.keys()), size=int(len(var_info) * imputation_ratio),
-                                                replace=False)
-
-        # Slicing indices - based on numerical / categorical
-        imp_idx = 0
-        # Looping through variables to find current slices
-        for var in range(len(list(var_info.keys()))):
-            # Get indeces to impute
-            if var_info[var]['dtype'] == 'categorical':
-                idx1 = imp_idx
-                imp_idx += var_info[var]['num_vals']
-                idx2 = imp_idx
-            else:
-                idx1 = imp_idx
-                imp_idx += 1
-                idx2 = imp_idx
-
-            # Only if variable is contained in the drawn imputed variables do we set to zero
-            if var in imputation_variables:
-                # Put into mask
-                imputation_mask[obs_idx, :][idx1:idx2] = 0
+    # Getting imputation mask
+    imputation_mask = create_imputation_mask(test_batch, var_info, imputation_ratio = 0.5)
 
     # Setting imputed variables to zero
     imputed_test_batch = (test_batch * imputation_mask)
@@ -251,6 +235,8 @@ def calculate_imputation_error(var_info, test_batch, model, device, imputation_r
     # Getting the reconstructed test_batch by sending the imputed test batch through VAE
     reconstructed_test_batch, _, _ = model.forward(imputed_test_batch,
                                                    reconstruct=True)  # [0]['output'].detach().numpy()
+
+    # Calculating RMSE based on Formula in Appendix D of Ma-paper
     var_idx = 0
     imputation_MSE = {'regular': 0, 'numerical': 0, 'categorical': 0}  # Initializing RMSE score
     for var in var_info.keys():
@@ -307,7 +293,8 @@ def get_test_results(model, test_loader, var_info, device, imputation_ratio=0.5)
         output, loss, nll = model.forward(test_batch, reconstruct=True, nll=True)
         results_dict['NLL'] = nll.item()
         rmse = calculate_RMSE(var_info, test_batch, output)
-        results_dict['RMSE'] = rmse.item()#.detach().numpy()
+        for variable_type in rmse.keys():
+            results_dict['RMSE_'+variable_type] = rmse[variable_type]
 
         imputation_errors = calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio)
         results_dict.update(imputation_errors)
@@ -316,4 +303,37 @@ def get_test_results(model, test_loader, var_info, device, imputation_ratio=0.5)
         results_df = pd.concat([results_df, single_results_df])
 
     return results_df.mean(axis=0)
+
+
+def create_imputation_mask(batch, var_info, imputation_ratio = 0.5):
+
+    # Initializing imputation mask
+    imputation_mask = np.ones(batch.shape)
+    # Looping over observations
+    for obs_idx, observation in enumerate(batch):
+
+        # Random draw of variables to set zero - based on imputation ratio
+        imputation_variables = np.random.choice(list(var_info.keys()), size=int(len(var_info) * imputation_ratio),
+                                                replace=False)
+
+        # Slicing indices - based on numerical / categorical
+        imp_idx = 0
+        # Looping through variables to find current slices
+        for var in range(len(list(var_info.keys()))):
+            # Get indeces to impute
+            if var_info[var]['dtype'] == 'categorical':
+                idx1 = imp_idx
+                imp_idx += var_info[var]['num_vals']
+                idx2 = imp_idx
+            else:
+                idx1 = imp_idx
+                imp_idx += 1
+                idx2 = imp_idx
+
+            # Only if variable is contained in the drawn imputed variables do we set to zero
+            if var in imputation_variables:
+                # Put into mask
+                imputation_mask[obs_idx, :][idx1:idx2] = 0
+
+    return imputation_mask
 
