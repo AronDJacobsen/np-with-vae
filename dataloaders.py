@@ -9,9 +9,12 @@ from sklearn.preprocessing import LabelBinarizer
 
 def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
 
-
+    if dataset_name == 'bank':
+        sep = ';'
     # TODO: sep=';'??
-    data = pd.read_csv(f'datasets/{dataset_name}.csv')
+    else:
+        sep = ','
+    data = pd.read_csv(f'datasets/{dataset_name}.csv', sep=sep)
 
     # TODO: pre-process this instead?
     if dataset_name == 'avocado':
@@ -89,7 +92,7 @@ def dataset_info_restructure(dataset_name, data):
     for idx, variable_name in enumerate(list(data.columns)):
         if inv_var_dtype[idx] == 'categorical':
            new_columns = pd.get_dummies(data[variable_name])
-           new_columns_names = list(new_columns.columns)
+           new_columns_names = list(variable_name + '_' + new_columns.columns.astype('str'))
            data[new_columns_names] = new_columns
            num_unique = len(new_columns_names) # num unique values
            # dropping original dataframe

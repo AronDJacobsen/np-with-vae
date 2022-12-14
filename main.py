@@ -99,6 +99,10 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
     # print(f'training = {args.is_train}')
     # Training procedure
+
+    #assert args.model == 'BASELINE' and 'train' in args.mode, 'baseline model can only test'
+    # todo: what if baseline?
+
     if 'train' in args.mode:
         nll_val = training(logger=logger, save_path=result_dir, max_patience=args.max_patience,
                            num_epochs=args.max_epochs,
@@ -109,12 +113,11 @@ if __name__ == '__main__':
     if 'test' in args.mode:
         # Save and plot test_results
         # loading best model
-        model = load_model(model_path=result_dir, model=model)
+        model = load_model(model_path=result_dir, model=model, device=device)
         # test_loss = evaluation(model, test_loader, device)
         # todo: extend outputs
-        NLL, MSE, imputation_error = evaluate_to_table(model, test_loader, device)
-
-        # get_test_results(model=model, result_path=result_dir, model_name=name, test_loader=test_loader, var_info=var_info, device=device)
+        # NLL, MSE, imputation_error = evaluate_to_table(model, test_loader, device)
+        get_test_results(model=model, result_path=result_dir, model_name=name, test_loader=test_loader, var_info=var_info, device=device)
 
         # evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256, natural=False,
         #                  device=None)
