@@ -18,31 +18,14 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
             batch = batch.to(device)
-
-
-            # batch[0] -> numerical data
-            # batch[1] -> categorical data
-
-            #numerical = batch[0].float()
-            #categorical = batch[1]
-
-            # concatenate into big input
-            #batch = torch.cat((numerical, categorical), dim=1)
-
-            # Should be different model for each kind
-            #batch = torch.stack(batch[1]).float() # TODO: To access only one (categorical )attribute - only needed as long as no multi-head
-            # batch = batch[0] 
-            # model returns the loss in forward
             _, loss, _ = model.forward(batch)
-            # TODO: this was also implemented in utils.evaluation and utils.samples_generated
-            loss = loss['loss']
             optimizer.zero_grad()
             loss.backward(retain_graph=True)
             optimizer.step()
 
         # Validation
         #loss_val = evaluation(val_loader, var_info, model=model, model_best=model, epoch=e,natural=natural,device=device)
-        loss_val, performance_df = evaluation(model=model, data_loader=val_loader, device=device)
+        loss_val = evaluation(model=model, data_loader=val_loader, device=device)
         logger.write_to_board(name="Validation", scalars={"NLL": loss_val}, index=e)
         print(f'Epoch: {e}, loss val={loss_val}')
         nll_val.append(loss_val.detach())  # save for plotting
