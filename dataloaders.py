@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
+import pickle
 
 def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
 
@@ -34,12 +35,20 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     #    - TODO: then use sigmoid activation function?
     #    - TODO: not normalizing categorical values
     numeric_columns = [columns[idx] for idx in var_dtype['numeric']]
-    train_min = train_data[numeric_columns].min()
-    train_max = train_data[numeric_columns].max()
-    train_data[numeric_columns] = (train_data[numeric_columns] - train_min) / (train_max - train_min)
-    val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max - train_min)
-    test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max - train_min)
+    train_mean = train_data[numeric_columns].mean()
+    train_std = train_data[numeric_columns].std()
+    train_data[numeric_columns] = (train_data[numeric_columns] - train_mean) / (train_std)
+    val_data[numeric_columns] = (val_data[numeric_columns] - train_mean) / (train_std)
+    test_data[numeric_columns] = (test_data[numeric_columns] - train_mean) / (train_std)
+    #
+    # train_min = train_data[numeric_columns].min()
+    # train_max = train_data[numeric_columns].max()
+    # train_data[numeric_columns] = (train_data[numeric_columns] - train_min) / (train_max-train_min)
+    # val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max-train_min)
+    # test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max-train_min)
 
+    # dump pickle
+    dump_pickle(train_mean, train_std, dataset_name)
 
     # create a data class with __getitem__, i.e. iterable
     train_data = iterate_data(train_data)
@@ -52,6 +61,15 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, drop_last=True, pin_memory=pin_memory)
 
     return ((var_info, var_dtype), (train_loader, val_loader, test_loader))
+
+
+def dump_pickle(train_mean, train_std, dataset_name):
+    # make pickle file for train mean and std
+    with open('{}_mean.pickle'.format(dataset_name), 'wb') as handle:
+        pickle.dump(train_mean, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('{}_std.pickle'.format(dataset_name), 'wb') as handle:
+        pickle.dump(train_std, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def dataset_info_restructure(dataset_name, data):
