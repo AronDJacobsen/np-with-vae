@@ -317,14 +317,49 @@ class VAE(nn.Module):
         KL = (self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)).sum(-1)
         # loss
         nll = (RE / self.total_num_vals).mean().detach()
-        MSE = nn.MSELoss()
-        rmse = -1  # TODO: torch.sqrt(MSE(model_output, x))
+        rmse = self.RMSE(x, output)
         # returning the output, the loss and
         if reduction == 'sum':
             return {'output': output}, {'loss': -(RE + KL).sum()}, {'NLL': nll, 'RMSE': rmse}
         # meaning
         elif reduction == 'avg':
             return {'output': output}, {'loss': -(RE + KL).mean()}, {'NLL': nll, 'RMSE': rmse}
+
+    def RMSE(self, x, x_recon):
+        var_idx = 0
+        MSE = 0
+        RMSE = 0
+        D = len(self.var_info.keys()) # Num variables
+        obs_in_batch = x.shape[0] # Num observations in batch
+        for var in self.var_info.keys():
+            num_vals = self.var_info[var]['num_vals']
+
+            # Getting length of slice
+            if self.var_info[var]['dtype'] == 'numerical':
+                idx_slice = 1
+            else:  # categorical
+                idx_slice = num_vals
+
+            # Imputation targets and predictions - for variable
+            var_targets = x[:, var_idx:var_idx + idx_slice]
+            var_preds = x_recon[:, var_idx:var_idx + idx_slice]
+
+            # MSE per variable 
+            MSE_var = torch.sum((var_targets - var_preds) ** 2) / obs_in_batch
+            
+            # Summing variable MSEs - (outer-most sum of formula)
+            MSE += MSE_var 
+                
+            # Updating current variable index
+            if self.var_info[var]['dtype'] == 'numerical':
+                var_idx += 1
+            else:  # categorical              
+                var_idx += num_vals
+
+        # Taking square-root (RMSE), and averaging over features. (As seen in formula)
+        RMSE += torch.sqrt(MSE) / D
+
+        return RMSE
 
     """ def RMSE(self, ):
 

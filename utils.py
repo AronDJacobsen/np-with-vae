@@ -182,13 +182,12 @@ def get_test_results(model, result_path, model_name, test_loader, var_info, devi
     imputation_error = imputation_score(test_loader, var_info, model, name=result_path, device=device,
                                         imputation_ratio=0.5)
 
-    print(imputation_error)
-
+# Imputation RMSE per numerical, categorical, both --> as well as imputation NLL
 
 def imputation_score(test_loader, var_info, model, name=None, device=None, imputation_ratio=0.5):
     model.eval()
 
-    RMSE = 0 # Initializing RMSE score
+    RMSE = [] # Initializing RMSE score
 
     # Num variables
     D = len(var_info.keys())
@@ -262,91 +261,6 @@ def imputation_score(test_loader, var_info, model, name=None, device=None, imput
                 var_idx += num_vals
 
         # Taking square-root (RMSE), and averaging over features. (As seen in formula)
-        RMSE += torch.sqrt(MSE) / D
+        RMSE.append(torch.sqrt(MSE) / D)
 
-    # Getting average RMSE across batches
-    total_batches = indx_batch + 1
-
-    return RMSE / total_batches 
-
-def RMSE(test_loader, var_info, model):
-    model.eval()
-
-    RMSE = 0 # Initializing RMSE score
-
-    # Num variables
-    D = len(var_info.keys())
-
-    # Looping through batches
-    for indx_batch, test_batch in enumerate(test_loader):
-
-        # Initializing imputation mask
-        imputation_mask = np.ones(test_batch.shape)
-
-        # Looping over observations
-        for obs_idx, observation in enumerate(test_batch):
-
-            # Random draw of variables to set zero - based on imputation ratio
-            imputation_variables = np.random.choice(list(var_info.keys()), size=int(len(var_info) * imputation_ratio),
-                                                    replace=False)
-
-            # Slicing indices - based on numerical / categorical
-            imp_idx = 0  
-            # Looping through variables to find current slices
-            for var in range(len(list(var_info.keys()))):
-                # Get indeces to impute
-                if var_info[var]['dtype'] == 'categorical':
-                    idx1 = imp_idx
-                    imp_idx += var_info[var]['num_vals']
-                    idx2 = imp_idx
-                else:
-                    idx1 = imp_idx
-                    imp_idx += 1
-                    idx2 = imp_idx
-
-                # Only if variable is contained in the drawn imputed variables do we set to zero
-                if var in imputation_variables:
-                    # Put into mask
-                    imputation_mask[obs_idx, :][idx1:idx2] = 0
-
-        # Setting imputed variables to zero
-        imputed_test_batch = (test_batch * imputation_mask)
-        imputed_test_batch = imputed_test_batch.to(device)
-
-        # Getting the reconstructed test_batch by sending the imputed test batch through VAE
-        reconstructed_test_batch = model.forward(imputed_test_batch)[0]['output'].detach().numpy()
-
-        var_idx = 0
-        MSE = 0
-        for var in var_info.keys():
-            num_vals = var_info[var]['num_vals']
-
-            # Getting length of slice
-            if var_info[var]['dtype'] == 'numerical':
-                idx_slice = 1
-            else:  # categorical
-                idx_slice = num_vals
-
-            # Imputation targets and predictions - for variable
-            imputation_targets = test_batch[:, var_idx:var_idx + idx_slice][imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
-            imputation_preds = reconstructed_test_batch[:, var_idx:var_idx + idx_slice][imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
-
-            # MSE per variable - for all unobserved slots (inner-most sum of formula)
-            MSE_var = torch.mean((imputation_targets - imputation_preds) ** 2)
-            
-            # Summing variable MSEs - (outer-most sum of formula)
-            MSE += MSE_var 
-                
-            # Updating current variable index
-            if var_info[var]['dtype'] == 'numerical':
-                var_idx += 1
-            else:  # categorical              
-                var_idx += num_vals
-
-        # Taking square-root (RMSE), and averaging over features. (As seen in formula)
-        RMSE += torch.sqrt(MSE) / D
-
-    # Getting average RMSE across batches
-    total_batches = indx_batch + 1
-    return RMSE / total_batches 
-
+    return RMSE
