@@ -8,9 +8,12 @@ from torch.distributions import Distribution
 PI = torch.from_numpy(np.asarray(np.pi))
 EPS = 1.e-5
 
-def log_categorical(x, p, num_classes=256, reduction=None, dim=None):
-    x_one_hot = F.one_hot(x.long(), num_classes=num_classes)
-    log_p = x_one_hot * torch.log(torch.clamp(p, EPS, 1. - EPS))
+def log_categorical(x, p, reduction='sum', dim=None):
+    #x_one_hot = F.one_hot(x.long(), num_classes=num_classes)
+    #log_p = x_one_hot * torch.log(torch.clamp(p, EPS, 1. - EPS))
+    # using clamp to avoid log(0) by setting min and max values as EPS and 1-EPS
+    log_p = x * torch.log(torch.clamp(p, EPS, 1. - EPS))
+
     if reduction == 'avg':
         return torch.mean(log_p, dim)
     elif reduction == 'sum':

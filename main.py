@@ -1,3 +1,4 @@
+import os
 import argparse
 from logger import Logger
 import numpy as np
@@ -114,13 +115,7 @@ if __name__ == '__main__':
         # Save and plot test_results
         # loading best model
         model = load_model(model_path=result_dir, model=model, device=device)
-        # test_loss = evaluation(model, test_loader, device)
-        # todo: extend outputs
-        # NLL, MSE, imputation_error = evaluate_to_table(model, test_loader, device)
-        get_test_results(model=model, result_path=result_dir, model_name=name, test_loader=test_loader, var_info=var_info, device=device)
-
-        # evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256, natural=False,
-        #                  device=None)
-
-
-
+        model.eval()
+        imputation_ratio=0.5 # todo extend to arguments?
+        results_df = get_test_results(model=model, test_loader=test_loader, var_info=var_info, device=device, imputation_ratio=imputation_ratio)
+        print(results_df)
