@@ -32,13 +32,19 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
 
     # normalize training data (similar to Ma et al.), however only the numerical columns
-    reference_idx = 0 # for reference in dataframe
+    #reference_idx = 0 # for reference in dataframe
     for idx in var_info.keys():
         if var_info[idx]['dtype'] == 'numerical':
             mean = train_data[var_info[idx]['name']].mean()
             std = train_data[var_info[idx]['name']].std()
-            var_info[idx]['normalize'] = (mean, std)
-        reference_idx += var_info[idx]['num_vals']
+            var_info[idx]['standardize'] = (mean, std)
+            min = train_data[var_info[idx]['name']].min()
+            max = train_data[var_info[idx]['name']].max()
+            var_info[idx]['normalize'] = (min, max)
+        #    reference_idx += 1
+        #else:
+        #    reference_idx += var_info[idx]['num_vals']
+
     #train_mean = train_data[numeric_columns].mean()
     #train_std = train_data[numeric_columns].std()
 
