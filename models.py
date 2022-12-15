@@ -82,13 +82,14 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, decoder_net, var_info, total_num_vals=None, natural=True, device=None):
+    def __init__(self, decoder_net, var_info, total_num_vals=None, natural=True, scale='none', device=None):
         super(Decoder, self).__init__()
 
         self.decoder = decoder_net
         self.var_info = var_info
         self.total_num_vals = total_num_vals  # depends on num_classes of each attribute
         self.natural = natural
+        self.scale = scale
         self.device = device
         self.softmax = torch.nn.Softmax(dim=1)
         self.softplus = torch.nn.Softplus()
@@ -179,13 +180,18 @@ class Decoder(nn.Module):
 
                 mu, log_var = torch.chunk(output[:, output_idx:output_idx + num_vals], 2, dim=1)
 
-                mu_orig, std_orig = self.var_info[var]['normalize']
-                # overwrite
-                mu, log_var = denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var)
+                if self.scale == 'standardize':
+                    mu_orig, std_orig = self.var_info[var]['standardize']
+                    mu, log_var = destand_num_dist(mu_orig, std_orig, mu, log_var)
+                elif self.scale == 'normalize':
+                    min, max = self.var_info[var]['normalize']
+                    mu, log_var = denorm_num_dist(min, max, mu, log_var)
+                elif self.scale == 'none':
+                    pass
                 # Extracting mu and std. values.
                 # mu = torch.tensor([output[:, var_index]]) # The mu's extracted from the output
-                std = torch.exp(
-                    0.5 * log_var)  # std = torch.exp(0.5*output[:, var_index+1]) # The sigma's extracred from the output
+                std = torch.exp(0.5 * log_var)
+                # std = torch.exp(0.5*output[:, var_index+1]) # The sigma's extracred from the output
 
                 x_batch = torch.normal(mu, std)  # .view(b, m)
 
@@ -234,9 +240,16 @@ class Decoder(nn.Module):
                     mu, log_var = torch.chunk(prob_d[:, prob_d_idx:prob_d_idx + num_vals], 2, dim=1)
 
                 # denormalizing
-                # mu = torch.tanh(mu)
-                mu_orig, std_orig = self.var_info[var]['normalize']
-                mu, log_var = denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var)
+                #mu = torch.tanh(mu)
+                if self.scale == 'standardize':
+                    mu_orig, std_orig = self.var_info[var]['standardize']
+                    mu, log_var = destand_num_dist(mu_orig, std_orig, mu, log_var)
+                elif self.scale == 'normalize':
+                    min, max = self.var_info[var]['normalize']
+                    mu, log_var = denorm_num_dist(min, max, mu, log_var)
+                elif self.scale == 'none':
+                    pass
+
                 log_p[:, var] = log_normal(x[:, x_idx:x_idx + 1], mu, log_var, reduction='sum', dim=1)
                 prob_d_idx += num_vals
                 x_idx += 1
@@ -327,13 +340,14 @@ class VampPrior(nn.Module):
 
         return log_prob # B 
 
-def normalize_numerical(var_info, data, D):
+def stand_num(var_info, data, D):
+    # i.e. z-score scaling
     new_data = torch.zeros((len(data), D))
     idx = 0
     for x_idx, var in enumerate(var_info):
         num_vals = var_info[var]['num_vals']
         if var_info[var]['dtype'] == 'numerical':
-            mean, std = var_info[var]['normalize']
+            mean, std = var_info[var]['standardize']
             new_data[:, idx] = (data[:, idx] - mean) / std
             idx += 1
         else:
@@ -342,7 +356,7 @@ def normalize_numerical(var_info, data, D):
     return new_data
 
 
-def denormalize_numerical_sample(var_info, data):
+def destand_num_sample_z(var_info, data):
     new_data = torch.zeros((len(data), len(var_info)))
     idx = 0
     for x_idx, var in enumerate(var_info):
@@ -355,15 +369,39 @@ def denormalize_numerical_sample(var_info, data):
     return new_data
 
 
-def denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var):
+
+def destand_num_dist(mu_orig, std_orig, mu, log_var):
     new_mu = mu * std_orig + mu_orig
     std = torch.sqrt(torch.exp(log_var))
     new_log_var = torch.log((std * std_orig) ** 2)
     return new_mu, new_log_var
 
 
+
+def norm_num(var_info, data, D):
+    # i.e. min max scaling
+    new_data = torch.zeros((len(data), D))
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            min, max = var_info[var]['normalize']
+            new_data[:, idx] = (data[:, idx] - min) / (max-min)
+            idx += 1
+        else:
+            idx += num_vals
+        # ignoring categorical
+    return new_data
+
+def denorm_num_dist(min, max, mu, log_var):
+    new_mu = mu * (max-min) + min
+    std = torch.sqrt(torch.exp(log_var))
+    new_log_var = torch.log((std * (max-min)) ** 2)
+    return new_mu, new_log_var
+
+
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info, D, M, natural, device, prior:str):
+    def __init__(self, total_num_vals, L, var_info, D, M, natural, scale, device, prior:str):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -378,7 +416,7 @@ class VAE(nn.Module):
         decoder_net.to(device)
         self.encoder = Encoder(encoder_net=encoder_net)
         self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,
-                               natural=natural, device=device)
+                               natural=natural, scale=scale, device=device)
         if prior == 'vampPrior':
             self.prior = VampPrior(L=L, D=D, num_vals=total_num_vals, encoder=self.encoder, num_components=total_num_vals)
         else:
@@ -387,24 +425,36 @@ class VAE(nn.Module):
         self.var_info = var_info  # contains type of likelihood for variables
         self.D = D
         self.device = device
+        self.scale = scale
         # todo: self.normalizing stuff
 
     def forward(self, x, loss=True, reconstruct=False, nll=False, reduction='sum'):
-        # if reduction == 'sum':
-        #    metric = SumMetric()
-        # elif reduction == 'avg':
-        #    metric = MeanMetric()
-        # else:
-        #    raise NotImplementedError('unknown recuction')
 
         # Initializing outputs
         RECONSTRUCTION = None
         LOSS = None
         NLL = None
+        '''
+        # batch normalization
+        reference_idx = 0
+        for idx in self.var_info.keys():
+            if self.var_info[idx]['dtype'] == 'numerical':
+                mean = torch.mean(x[:, reference_idx])
+                std = torch.std(x[:, reference_idx])
+                self.var_info[idx]['normalize'] = (mean, std)
+                reference_idx += 1
+            else:
+                reference_idx += self.var_info[idx]['num_vals']
+        '''
+        if self.scale == 'standardize':
+            x = stand_num(self.var_info, x, self.D)
+        elif self.scale == 'normalize':
+            x = norm_num(self.var_info, x, self.D)
+        elif self.scale == 'none':
+            pass
 
-        x_norm = normalize_numerical(self.var_info, x, self.D)
         # Encode
-        mu_e, log_var_e = self.encoder.encode(x_norm)
+        mu_e, log_var_e = self.encoder.encode(x)
         # sample in latent space
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)
         z = z.to(self.device)
@@ -420,8 +470,8 @@ class VAE(nn.Module):
             # reconstruction error
             RE = self.decoder.log_prob(x, z)  # z is decoded back
             # Kullback–Leibler divergence, regularizer
-            KL = torch.sum((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),
-                           axis=1)
+            # todo mean or sum?
+            KL = torch.mean((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),axis=1)
             # summing the loss for this batch
             LOSS = -(RE + KL).sum()
 
