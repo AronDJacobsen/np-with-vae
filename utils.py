@@ -5,9 +5,9 @@ import torch
 from models import *
 
 
-def get_model(model_name, total_num_vals, L, var_info, D, M, natural, scale, device,prior,beta, batch_scale):
+def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device,prior,beta, scale, scale_type):
     if model_name == 'VAE':
-        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, scale=scale, device=device,prior=prior,beta=beta, batch_scale=batch_scale)
+        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device,prior=prior,beta=beta, scale=scale, scale_type=scale_type)
     elif model_name == 'BASELINE':
         # todo make it train and able to evaluate like the other
         return Baseline()
@@ -61,41 +61,6 @@ def evaluation(model, data_loader, device, reduction='sum'):
     return loss #, performance_df
 
 
-# def evaluate_to_table(test_loader, var_info, name=None, model_best=None, epoch=None, M=256,natural=False,device=None):
-def evaluate_to_table(model, data_loader, device):
-    # EVALUATION
-    '''
-    if model_best is None:
-        D = len(var_info.keys())
-        L = D
-        total_num_vals = 0
-        for var in var_info.keys():
-            total_num_vals += var_info[var]['num_vals']
-        model_best = VAE(total_num_vals=total_num_vals, L=L, var_info = var_info, D=D, M=M, natural=natural, device=device)
-        model_best.to(device)
-        # load best performing model
-        model_best.load_state_dict(torch.load(name+'.model'))
-
-    model_best.eval()
-    '''
-
-    loss = 0.
-    N = 0.
-    for indx_batch, batch in enumerate(data_loader):
-        batch = batch.to(device)
-        loss_t = model.forward(batch, reduction='sum')['loss']
-        loss = loss + loss_t.item()
-        N = N + batch.shape[0]
-    loss = loss / N
-
-    '''
-    if epoch is None:
-        print(f'FINAL LOSS: nll={loss}')
-    else:
-        print(f'Epoch: {epoch}, val nll={loss}')
-    '''
-
-    return loss  # + mse? (NLL, MSE)
 
 
 def samples_real(name, test_loader):
@@ -286,6 +251,12 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
 
         results_dict = {} # initialize empty
         output, loss, nll = model.forward(test_batch, reconstruct=True, nll=True)
+        if model.scale_type == 'outside_model':
+            if model.scale == 'standardize':
+                output = destand_num(model.var_info, output)
+            elif model.scale == 'normalize':
+                output = denorm_num(model.var_info, output)
+
         results_dict['NLL'] = nll.item()
 
         torch_rmse.append(torch.sqrt(nn.MSELoss()(output, test_batch)))

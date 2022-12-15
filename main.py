@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='VAE', choices=['VAE', 'BASELINE'])
     parser.add_argument('--natural', help='Whether to use naturals or not', dest='natural', action='store_true')
     parser.add_argument('--scale', type=str, help='how to scale the data', choices=['standardize', 'normalize', 'none'])
-    parser.add_argument('--batch_scale', help='batch scaling (and not on all training data)', default=False, type=bool)
+    parser.add_argument('--scale_type', type=str, help='see choices', choices=['batch_scaling', 'in_model', 'outside_model'])
     parser.add_argument('--lr', help='Starting learning rate', default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
     parser.add_argument('--prior', help='"Prior type"', default='standard', choices=['standard', 'vampPrior'])
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # DATASET
     # information about variables and dataset loaders
     output = load_dataset(dataset_name=args.dataset, batch_size=args.batch_size, shuffle=True, seed=args.seed,
-                          pin_memory=pin_memory)
+                          pin_memory=pin_memory, scale=args.scale, scale_type=args.scale_type)
     # extracting output
     info, loaders = output
     (var_info, var_dtype) = info
@@ -92,14 +92,14 @@ if __name__ == '__main__':
         else:
             D += 1
 
-    # TODO: make hparam?
     M = 256  # the number of neurons in scale (s) and translation (t) nets, i.e. hidden dimension in decoder/encoder
 
     # prior = torch.distributions.MultivariateNormal(torch.zeros(L), torch.eye(L))
     # model = VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=args.natural, device=device)
 
     model = get_model(model_name=args.model, total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M,
-                      natural=args.natural, scale=args.scale, device=device, prior=args.prior, beta=args.beta, batch_scale=args.batch_scale)
+                      natural=args.natural, device=device, prior=args.prior, beta=args.beta,
+                      scale=args.scale, scale_type=args.scale_type)
     model = model.to(device)
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
@@ -123,6 +123,6 @@ if __name__ == '__main__':
         # loading best model
         model = load_model(model_path=result_dir, model=model, device=device)
         model.eval()
-        imputation_ratio=0.5 # todo extend to arguments?
+        imputation_ratio=0.5
         results_df = get_test_results(model=model, test_loader=test_loader, var_info=var_info, D=D, device=device, imputation_ratio=imputation_ratio)
         print(results_df)

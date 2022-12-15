@@ -8,16 +8,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 import pickle
 
-def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
+def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory, scale, scale_type):
 
     if dataset_name == 'bank':
         sep = ';'
-    # TODO: sep=';'??
     else:
         sep = ','
     data = pd.read_csv(f'datasets/{dataset_name}.csv', sep=sep)
 
-    # TODO: pre-process this instead?
     if dataset_name == 'avocado':
         data = data.drop(columns=['Unnamed: 0'])
         data = data.drop(columns=['Date'])
@@ -26,13 +24,11 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
     # getting information about each variable and restructuring categorical to numbers
     data, var_info, var_dtype = dataset_info_restructure(dataset_name, data)
     # splitting data
-    # TODO: hparam test size
     train_data, test_data = train_test_split(data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
     # again, split to get val data (on train data)
     train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=seed, shuffle=shuffle)# , stratify=None)
 
     # normalize training data (similar to Ma et al.), however only the numerical columns
-    #reference_idx = 0 # for reference in dataframe
     save = 0
     for idx in var_info.keys():
         if var_info[idx]['dtype'] == 'numerical':
@@ -43,22 +39,17 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
             min = train_data[var_info[idx]['name']].min()
             max = train_data[var_info[idx]['name']].max()
             var_info[idx]['normalize'] = (min, max)
-        #    reference_idx += 1
-        #else:
-        #    reference_idx += var_info[idx]['num_vals']
 
-    #train_mean = train_data[numeric_columns].mean()
-    #train_std = train_data[numeric_columns].std()
-
-    #train_data[numeric_columns] = (train_data[numeric_columns] - train_mean) / (train_std)
-    #val_data[numeric_columns] = (val_data[numeric_columns] - train_mean) / (train_std)
-    #test_data[numeric_columns] = (test_data[numeric_columns] - train_mean) / (train_std)
-    #
-    # train_min = train_data[numeric_columns].min()
-    # train_max = train_data[numeric_columns].max()
-    # train_data[numeric_columns] = (train_data[numeric_columns] - train_min) / (train_max-train_min)
-    # val_data[numeric_columns] = (val_data[numeric_columns] - train_min) / (train_max-train_min)
-    # test_data[numeric_columns] = (test_data[numeric_columns] - train_min) / (train_max-train_min)
+            # standardize outside model
+            if scale_type == 'outside_model':
+                if scale == 'standardize':
+                    train_data[var_info[idx]['name']] = (train_data[var_info[idx]['name']] - mean) / std
+                    val_data[var_info[idx]['name']] =(val_data[var_info[idx]['name']] - mean) / std
+                    test_data[var_info[idx]['name']] =(test_data[var_info[idx]['name']] - mean) / std
+                elif scale == 'normalize':
+                    train_data[var_info[idx]['name']] = (train_data[var_info[idx]['name']] - min) / (max-min)
+                    val_data[var_info[idx]['name']] =(val_data[var_info[idx]['name']] - min) / (max-min)
+                    test_data[var_info[idx]['name']] =(test_data[var_info[idx]['name']] - min) / (max-min)
 
     # dump pickle
     #dump_pickle(train_mean, train_std, dataset_name)

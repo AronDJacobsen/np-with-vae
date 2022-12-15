@@ -4,9 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from prob_dists import *
-
 # importing distributions
 import torch.distributions as dists
+
+
 
 
 def to_natural(params):
@@ -14,13 +15,164 @@ def to_natural(params):
     sigma = torch.exp(0.5 * log_var)  # converting
     eta2 = -0.5 / sigma ** 2
     eta1 = -2 * mu * eta2
-    return torch.stack((eta1, eta2), dim=1).flatten(start_dim=1)
+    # torch.stack((eta1, eta2), dim=1).flatten(start_dim=1)
+    return eta1, eta2
 
 
 def to_params(etas):
     eta1, eta2 = torch.chunk(etas, 2, dim=1)
     mu, log_var = -0.5 * eta1 / eta2, torch.log(-0.5 / eta2)
-    return torch.stack((mu, log_var), dim=1).flatten(start_dim=1)
+    return mu, log_var
+
+
+
+def stand_num(var_info, data):
+    # whole batch
+    # i.e. z-score scaling
+    new_data = data.clone()
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            mean, std = var_info[var]['standardize']
+            new_data[:, idx] = (data[:, idx] - mean) / std
+            idx += 1
+        else:
+            idx += num_vals
+        # ignoring categorical
+    return new_data
+
+
+def destand_num_params(var_info, data, natural):
+    # whole batch, when parameters
+    new_data = data.clone()
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            mean, std = var_info[var]['normalize']
+            if natural:
+                mu, log_var = to_params(data[:, idx:idx + num_vals])
+            else:
+                mu, log_var = torch.chunk(data[:, idx:idx + num_vals], 2, dim=1)
+            new_data[:, idx:idx + 1] = mu * std + mean
+            new_data[:, idx + 1:idx + num_vals] = torch.log((torch.exp(0.5 * log_var) * std) ** 2)
+
+            if natural:
+                eta1, eta2 = to_natural(new_data[:, idx:idx + num_vals])
+                new_data[:, idx:idx + 1] = eta1
+                new_data[:, idx + 1:idx + num_vals] =eta2
+        # ignoring categorical
+        idx += num_vals
+    return new_data
+
+
+def destand_num(var_info, data):
+    # whole batch, when numerical
+    new_data = data.clone()
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            mean, std = var_info[var]['normalize']
+            new_data[:, idx:idx + 1] = data[:, idx:idx + 1] * std + mean
+            idx += 1
+        # ignoring categorical
+        else:
+            idx += num_vals
+    return new_data
+
+
+def destand_num_dist(mu_orig, std_orig, mu, log_var):
+    # single params
+    new_mu = mu * std_orig + mu_orig
+    std = torch.sqrt(torch.exp(log_var))
+    new_log_var = torch.log((std * std_orig) ** 2)
+    return new_mu, new_log_var
+
+
+def norm_num(var_info, data):
+    # whole batch
+    # i.e. min max scaling
+    new_data = data.clone()
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            min, max = var_info[var]['normalize']
+            new_data[:, idx] = (data[:, idx] - min) / (max - min)
+            idx += 1
+        else:
+            idx += num_vals
+        # ignoring categorical
+    return new_data
+
+
+def denorm_num_params(var_info, data, natural):
+    # whole batch
+    new_data = data.clone()
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            min, max = var_info[var]['normalize']
+            if natural:
+                mu, log_var = to_params(data[:, idx:idx + num_vals])
+            else:
+                mu, log_var = torch.chunk(data[:, idx:idx + num_vals], 2, dim=1)
+            new_data[:, idx:idx + 1] = (mu * (max - min)) + min
+            std = torch.sqrt(torch.exp(log_var))
+            new_data[:, idx + 1:idx + 2] = torch.log((std * (max - min)) ** 2)
+            if natural:
+                eta1, eta2 = to_natural(new_data[:, idx:idx + num_vals])
+                new_data[:, idx:idx + 1] = eta1
+                new_data[:, idx + 1:idx + 2] = eta2
+
+        # ignoring categorical
+        idx += num_vals
+    return new_data
+
+def denorm_num(var_info, data):
+    # whole batch
+    new_data = data.clone()
+    idx = 0
+    for x_idx, var in enumerate(var_info):
+        num_vals = var_info[var]['num_vals']
+        if var_info[var]['dtype'] == 'numerical':
+            min, max = var_info[var]['normalize']
+            new_data[:, idx:idx + 1] = data[:, idx:idx + 1] * (max-min) + min
+            idx += 1
+        # ignoring categorical
+        else:
+            idx += num_vals
+    return new_data
+
+def denorm_num_dist(min, max, mu, log_var):
+    # single params
+    new_mu = mu * (max - min) + min
+    std = torch.sqrt(torch.exp(log_var))
+    new_log_var = torch.log((std * (max - min)) ** 2)
+    return new_mu, new_log_var
+
+
+def batch_scaling(var_info, data):
+    reference_idx = 0
+    for idx in var_info.keys():
+        if var_info[idx]['dtype'] == 'numerical':
+            mean = torch.mean(data[:, reference_idx])
+            std = torch.std(data[:, reference_idx])
+            var_info[idx]['standardize'] = (mean, std)
+            min = torch.min(data[:, reference_idx])
+            max = torch.max(data[:, reference_idx])
+            var_info[idx]['normalize'] = (min, max)
+            reference_idx += 1
+        else:
+            reference_idx += var_info[idx]['num_vals']
+
+    return var_info
+
+
+
 
 
 # initialized within VAE class
@@ -188,7 +340,7 @@ class Decoder(nn.Module):
                 # p = prob_d.view(-1, self.total_num_vals) # merging batch and output dims (lists of possible outputs)
                 # we want one sample per number of possible values (e.g. pixel values)
                 if self.natural:
-                    mu, log_var = torch.chunk(to_params(params[:, output_idx:output_idx + num_vals]), 2, dim=1)
+                    mu, log_var = to_params(params[:, output_idx:output_idx + num_vals])
                 else:
                     mu, log_var = torch.chunk(params[:, output_idx:output_idx + num_vals], 2, dim=1)
 
@@ -238,7 +390,7 @@ class Decoder(nn.Module):
                     #eta1, eta2 = torch.chunk(params[:, params_idx:params_idx + num_vals], 2, dim=1)
                     # restricting eta2 to be -inf < eta2 < 0
                     #mu, log_var = -0.5 * eta1 / eta2, torch.log(-0.5 / eta2)
-                    mu, log_var = torch.chunk(to_params(params[:, params_idx:params_idx + num_vals]), 2, dim=1)
+                    mu, log_var = to_params(params[:, params_idx:params_idx + num_vals])
                 else:
                     mu, log_var = torch.chunk(params[:, params_idx:params_idx + num_vals], 2, dim=1)
 
@@ -334,122 +486,9 @@ class VampPrior(nn.Module):
         return log_prob  # B
 
 
-def stand_num(var_info, data):
-    # whole batch
-    # i.e. z-score scaling
-    new_data = data.clone()
-    idx = 0
-    for x_idx, var in enumerate(var_info):
-        num_vals = var_info[var]['num_vals']
-        if var_info[var]['dtype'] == 'numerical':
-            mean, std = var_info[var]['standardize']
-            new_data[:, idx] = (data[:, idx] - mean) / std
-            idx += 1
-        else:
-            idx += num_vals
-        # ignoring categorical
-    return new_data
-
-
-def destand_num_params(var_info, data, natural):
-    # whole batch
-    new_data = data.clone()
-    idx = 0
-    for x_idx, var in enumerate(var_info):
-        # todo natural
-        num_vals = var_info[var]['num_vals']
-        if var_info[var]['dtype'] == 'numerical':
-            mean, std = var_info[var]['normalize']
-            if natural:
-                mu, log_var = torch.chunk(to_params(data[:, idx:idx + num_vals]), 2, dim=1)
-            else:
-                mu, log_var = torch.chunk(data[:, idx:idx + num_vals], 2, dim=1)
-            new_data[:, idx:idx + 1] = mu * std + mean
-            new_data[:, idx + 1:idx + num_vals] = torch.log((torch.exp(0.5 * log_var) * std) ** 2)
-
-            if natural:
-                new_data[:, idx:idx + num_vals] = to_natural(new_data[:, idx:idx + num_vals])
-        # ignoring categorical
-        idx += num_vals
-    return new_data
-
-
-def destand_num_dist(mu_orig, std_orig, mu, log_var):
-    # single params
-    new_mu = mu * std_orig + mu_orig
-    std = torch.sqrt(torch.exp(log_var))
-    new_log_var = torch.log((std * std_orig) ** 2)
-    return new_mu, new_log_var
-
-
-def norm_num(var_info, data):
-    # whole batch
-    # i.e. min max scaling
-    new_data = data.clone()
-    idx = 0
-    for x_idx, var in enumerate(var_info):
-        num_vals = var_info[var]['num_vals']
-        if var_info[var]['dtype'] == 'numerical':
-            min, max = var_info[var]['normalize']
-            new_data[:, idx] = (data[:, idx] - min) / (max - min)
-            idx += 1
-        else:
-            idx += num_vals
-        # ignoring categorical
-    return new_data
-
-
-def denorm_num_params(var_info, data, natural):
-    # whole batch
-    new_data = data.clone()
-    idx = 0
-    for x_idx, var in enumerate(var_info):
-        num_vals = var_info[var]['num_vals']
-        if var_info[var]['dtype'] == 'numerical':
-            min, max = var_info[var]['normalize']
-            if natural:
-                mu, log_var = torch.chunk(to_params(data[:, idx:idx + num_vals]), 2, dim=1)
-            else:
-                mu, log_var = torch.chunk(data[:, idx:idx + num_vals], 2, dim=1)
-            new_data[:, idx:idx + 1] = (mu * (max - min)) + min
-            std = torch.sqrt(torch.exp(log_var))
-            new_data[:, idx + 1:idx + 2] = torch.log((std * (max - min)) ** 2)
-            if natural:
-                new_data[:, idx:idx + num_vals] = to_natural(new_data[:, idx:idx + num_vals])
-
-        # ignoring categorical
-        idx += num_vals
-    return new_data
-
-
-def denorm_num_dist(min, max, mu, log_var):
-    # single params
-    new_mu = mu * (max - min) + min
-    std = torch.sqrt(torch.exp(log_var))
-    new_log_var = torch.log((std * (max - min)) ** 2)
-    return new_mu, new_log_var
-
-
-def batch_scaling(var_info, data):
-    reference_idx = 0
-    for idx in var_info.keys():
-        if var_info[idx]['dtype'] == 'numerical':
-            mean = torch.mean(data[:, reference_idx])
-            std = torch.std(data[:, reference_idx])
-            var_info[idx]['standardize'] = (mean, std)
-            min = torch.min(data[:, reference_idx])
-            max = torch.max(data[:, reference_idx])
-            var_info[idx]['normalize'] = (min, max)
-            reference_idx += 1
-        else:
-            reference_idx += var_info[idx]['num_vals']
-
-    return var_info
-
-
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info, D, M, natural, scale, device, prior: str, beta=1.0,
-                 batch_scale=False):
+    def __init__(self, total_num_vals, L, var_info, D, M, natural, device, prior: str, beta=1.0,
+                 scale='none', scale_type='none'):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -495,9 +534,8 @@ class VAE(nn.Module):
         self.device = device
         self.scale = scale
         self.beta = beta
-        self.batch_scale = batch_scale
+        self.scale_type = scale_type
         self.natural = natural
-        # todo: self.normalizing stuff
 
     def forward(self, x, loss=True, reconstruct=False, nll=False, reduction='sum'):
 
@@ -506,17 +544,16 @@ class VAE(nn.Module):
         LOSS = None
         NLL = None
 
-        # batch scaling
-        if self.batch_scale:
-            # updating scaling and de-scaling parameters
-            self.var_info = batch_scaling(self.var_info, x)
-
-        if self.scale == 'standardize':
-            x = stand_num(self.var_info, x)
-        elif self.scale == 'normalize':  # Between 0 and 1
-            x = norm_num(self.var_info, x)
-        elif self.scale == 'none':
-            pass
+        if self.scale_type in ['batch_scaling', 'in_model']:
+            if self.scale_type == 'batch_scaling':
+                # updating scaling and de-scaling parameters
+                self.var_info = batch_scaling(self.var_info, x)
+            if self.scale == 'standardize':
+                x = stand_num(self.var_info, x)
+            elif self.scale == 'normalize':  # Between 0 and 1
+                x = norm_num(self.var_info, x)
+            elif self.scale == 'none':
+                pass
 
         # Encode
         x = x.to(self.device)  # Now normalized
@@ -527,12 +564,13 @@ class VAE(nn.Module):
 
         params = self.decoder.decode(z)  # probability output -
 
-        if self.scale == 'standardize':
-            params = destand_num_params(self.var_info, params, self.natural)
-        elif self.scale == 'normalize':
-            params = denorm_num_params(self.var_info, params, self.natural)
-        elif self.scale == 'none':
-            pass
+        if self.scale_type in ['batch_scaling', 'in_model']:
+            if self.scale == 'standardize':
+                params = destand_num_params(self.var_info, params, self.natural)
+            elif self.scale == 'normalize':
+                params = denorm_num_params(self.var_info, params, self.natural)
+            elif self.scale == 'none':
+                pass
 
         # reconstruct
         if reconstruct:
@@ -550,11 +588,14 @@ class VAE(nn.Module):
             # todo mean or sum?
             # torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
             #KL = torch.mean(-0.5 * torch.sum(1 + log_var_e - mu_e ** 2 - log_var_e.exp(), dim = 1), dim = 0)
-            KL = torch.sum((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),
-                           axis=1)
+            #KL = torch.sum((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),
+            #               axis=1)
+            KL = self.prior.log_prob(z).sum(dim=1) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z).sum(dim=1)
+            #log_pz = self.prior_z(pz_loc).log_prob(z).sum(dim=-1)  # batch_size
+            #log_qz_x = self.encoder.q_z(z_loc, z_log_scale).log_prob(z).sum(dim=-1)  # batch_size
             # summing the loss for this batch
             # torch.sqrt(F.mse_loss(self.decoder.sample(z), x))
-            LOSS = -(RE + self.beta * KL).sum()  # self.calculate_RMSE(x, self.decoder.sample(params))['regular']
+            LOSS = -(RE + self.beta * KL).sum(dim=0)  # self.calculate_RMSE(x, self.decoder.sample(params))['regular']
 
         if nll:
             assert (nll and loss) == True, 'loss also has to be true in input for forward call'
@@ -565,6 +606,7 @@ class VAE(nn.Module):
             NLL = (-RE / self.D).mean().detach()
 
         return RECONSTRUCTION, LOSS, NLL
+
 
     def calculate_RMSE(self, x, x_recon):
         var_idx = 0
