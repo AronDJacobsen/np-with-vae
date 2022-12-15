@@ -33,10 +33,12 @@ def load_dataset(dataset_name, batch_size, shuffle, seed, pin_memory):
 
     # normalize training data (similar to Ma et al.), however only the numerical columns
     #reference_idx = 0 # for reference in dataframe
+    save = 0
     for idx in var_info.keys():
         if var_info[idx]['dtype'] == 'numerical':
             mean = train_data[var_info[idx]['name']].mean()
             std = train_data[var_info[idx]['name']].std()
+            save += train_data[var_info[idx]['name']].var()
             var_info[idx]['standardize'] = (mean, std)
             min = train_data[var_info[idx]['name']].min()
             max = train_data[var_info[idx]['name']].max()

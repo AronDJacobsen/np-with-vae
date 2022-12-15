@@ -43,9 +43,9 @@ def log_bernoulli(x, p, reduction=None, dim=None):
 
 
 def log_normal(x, mu, log_var, reduction=None, dim=None):
-    log_p = -0.5 * torch.log(2. * PI) - 0.5 * log_var - 0.5 * torch.exp(-log_var) * (x - mu)**2.
+    #log_p = -0.5 * torch.log(2. * PI) - 0.5 * log_var - 0.5 * torch.exp(-log_var) * (x - mu)**2.
     # the same:
-    #log_p = torch.distributions.normal.Normal(mu, torch.sqrt(torch.exp(log_var))).log_prob(x)
+    log_p = torch.distributions.normal.Normal(mu, torch.sqrt(torch.exp(0.5*log_var))).log_prob(x)
     if reduction == 'avg':
         return torch.mean(log_p, dim)
     elif reduction == 'sum':

@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
     ## Creating directory for test results
     result_dir = 'results/' + args.experiment + '/'
+    #result_dir = 'results/' + 'thinlinc/Results/' + args.dataset + '/'
     if not (os.path.exists(result_dir)):
         os.mkdir(result_dir)
     name = 'vae'
@@ -122,5 +123,5 @@ if __name__ == '__main__':
         model = load_model(model_path=result_dir, model=model, device=device)
         model.eval()
         imputation_ratio=0.5 # todo extend to arguments?
-        results_df = get_test_results(model=model, test_loader=test_loader, var_info=var_info, device=device, imputation_ratio=imputation_ratio)
+        results_df = get_test_results(model=model, test_loader=test_loader, var_info=var_info, D=D, device=device, imputation_ratio=imputation_ratio)
         print(results_df)
