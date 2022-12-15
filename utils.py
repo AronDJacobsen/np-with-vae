@@ -5,9 +5,9 @@ import torch
 from models import *
 
 
-def get_model(model_name, total_num_vals, L, var_info, D, M, natural, scale, device,prior,beta):
+def get_model(model_name, total_num_vals, L, var_info, D, M, natural, scale, device,prior,beta, batch_scale):
     if model_name == 'VAE':
-        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, scale=scale, device=device,prior=prior,beta=beta)
+        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, scale=scale, device=device,prior=prior,beta=beta, batch_scale=batch_scale)
     elif model_name == 'BASELINE':
         # todo make it train and able to evaluate like the other
         return Baseline()
@@ -46,18 +46,7 @@ def evaluation(model, data_loader, device, reduction='sum'):
     #performance_df = pd.DataFrame()
     for indx_batch, batch in enumerate(data_loader):
         batch = batch.to(device)
-        # test_batch = torch.stack(test_batch[1]).float() # TODO: To access only one attribute - only needed as long as no multi-head
-        # TODO: adjust to normal batch
-        # numerical = test_batch[0].float()
-        # categorical = test_batch[1]
-
-        # concatenate into big input
-        # test_batch = torch.cat((numerical, categorical), dim=1)
-
-        # test_batch = test_batch[1]
-        # TODO: this was also implemented in train.training and utils.samples_generated
         _, loss, _ = model.forward(batch, reduction=reduction)
-        #performance_df = pd.concat([performance_df, pd.DataFrame.from_dict([performance])])
 
         total_loss = total_loss + loss
         N = N + batch.shape[0]
