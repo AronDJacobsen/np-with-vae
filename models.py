@@ -287,6 +287,8 @@ class Decoder(nn.Module):
                     # eta2 have to be negative -inf<eta2<0
                     # extracting eta2
                     params[:, idx + 1:idx + 2] = -self.softplus(h_d[:, idx + 1:idx + 2])
+                    #params[:, idx+1:idx+num_vals] = -torch.exp(h_d[:, idx+1:idx+num_vals])
+
 
                 idx += num_vals
             else:
@@ -487,8 +489,9 @@ class VampPrior(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info, D, M, natural, device, prior: str, beta=1.0,
-                 scale='none', scale_type='none', decay=False):
+    def __init__(self, total_num_vals, L, var_info, D, M, natural, device, prior: str, beta=1.0, decay=False,
+                 scale='none', scale_type='none'):
+
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -534,6 +537,7 @@ class VAE(nn.Module):
         self.device = device
         self.scale = scale
         self.beta = beta
+        self.decay = decay
         self.scale_type = scale_type
         self.natural = natural
         self.decay = decay
@@ -543,8 +547,6 @@ class VAE(nn.Module):
 
         if epoch is not None:
             self.epoch = epoch
-        
-        # self.epoch = (self.batch // 12) + 1
 
         # Initializing outputs
         RECONSTRUCTION = None
@@ -564,6 +566,7 @@ class VAE(nn.Module):
 
         # Encode
         x = x.to(self.device)  # Now normalized
+        # todo add clamp log_var??
         mu_e, log_var_e = self.encoder.encode(x)
         # sample in latent space
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)  # Sampling latent z from learned mu and log var.
@@ -592,7 +595,6 @@ class VAE(nn.Module):
             #    RE = nn.MSELoss()(x,z)
             RE = self.decoder.log_prob(x, params)  # z is decoded back
             # Kullback–Leibler divergence, regularizer
-            # todo mean or sum?
             # torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
             #KL = torch.mean(-0.5 * torch.sum(1 + log_var_e - mu_e ** 2 - log_var_e.exp(), dim = 1), dim = 0)
             #KL = torch.sum((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),
@@ -603,7 +605,7 @@ class VAE(nn.Module):
             # summing the loss for this batch
             # torch.sqrt(F.mse_loss(self.decoder.sample(z), x))
 
-            LOSS = -(RE + (1/(self.epoch+1) if self.decay else 1) * self.beta * KL).sum(dim=0)  # self.calculate_RMSE(x, self.decoder.sample(params))['regular']
+            LOSS = -(RE + self.beta * (1/(self.epoch+1) if self.decay else 1) * KL).sum(dim=0)
 
         if nll:
             assert (nll and loss) == True, 'loss also has to be true in input for forward call'
@@ -614,6 +616,15 @@ class VAE(nn.Module):
             NLL = (-RE / self.D).mean().detach()
 
         return RECONSTRUCTION, LOSS, NLL
+
+
+
+
+
+
+
+
+
 
 
     def calculate_RMSE(self, x, x_recon):

@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from utils import evaluation, samples_generated
+from utils import *
 
 def training(logger, save_path, max_patience, num_epochs, model, optimizer, train_loader, val_loader, var_info, device):
     nll_val = []
@@ -25,9 +25,11 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
 
         # Validation
         #loss_val = evaluation(val_loader, var_info, model=model, model_best=model, epoch=e,natural=natural,device=device)
-        loss_val = evaluation(model=model, data_loader=val_loader, device=device)
+        loss_val, rmse_val = evaluation(model=model, data_loader=val_loader, device=device)
         logger.write_to_board(name="Validation", scalars={"NLL": loss_val}, index=e)
-        print(f'Epoch: {e}, loss val={loss_val}')
+
+
+        print(f'Epoch: {e}, loss val={loss_val}, rmse val={rmse_val}')
         nll_val.append(loss_val.detach().cpu())  # save for plotting
 
         if e == 0:

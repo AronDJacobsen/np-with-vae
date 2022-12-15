@@ -5,9 +5,11 @@ import torch
 from models import *
 
 
-def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device,prior,beta, scale, scale_type, decay):
+def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device, prior, beta, decay, scale, scale_type):
     if model_name == 'VAE':
-        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device,prior=prior,beta=beta, scale=scale, scale_type=scale_type, decay=decay)
+        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device,
+                   prior=prior, beta=beta, decay=decay, scale=scale, scale_type=scale_type)
+
     elif model_name == 'BASELINE':
         # todo make it train and able to evaluate like the other
         return Baseline()
@@ -42,25 +44,36 @@ def evaluation(model, data_loader, device, reduction='sum'):
     '''
     # model = model.eval()
     total_loss = 0.
+    total_rmse = 0.
     N = 0.
-    #performance_df = pd.DataFrame()
+    # performance_df = pd.DataFrame()
     for indx_batch, batch in enumerate(data_loader):
         batch = batch.to(device)
-        _, loss, _ = model.forward(batch, reduction=reduction)
+        output, loss, _ = model.forward(batch, reconstruct=True, reduction=reduction)
+
+        # descaling
+        if model.scale_type == 'outside_model':
+            if model.scale == 'standardize':
+                output = destand_num(model.var_info, output)
+                batch = destand_num(model.var_info, batch)
+            elif model.scale == 'normalize':
+                output = denorm_num(model.var_info, output)
+                batch = denorm_num(model.var_info, batch)
 
         total_loss = total_loss + loss
+        total_rmse += torch.sqrt(((output - batch) ** 2).sum(dim=1) / len(model.var_info.keys())).sum(dim=0)
+        # total_rmse += torch.sqrt(nn.MSELoss(reduction='sum')(output, batch)) # reduction is mean
+
         N = N + batch.shape[0]
 
     loss = total_loss / N
-
+    rmse = total_rmse / N
     # if epoch is None:
     #    print(f'FINAL LOSS: nll={loss}')
     # else:
     #    print(f'Epoch: {epoch}, val nll={loss}')
 
-    return loss #, performance_df
-
-
+    return loss, rmse  # , performance_df
 
 
 def samples_real(name, test_loader):
@@ -129,9 +142,9 @@ def calculate_RMSE(var_info, x, x_recon):
     D = len(var_info.keys())
     num_numerical = sum([var_info[var]['dtype'] == 'numerical' for var in var_info.keys()])
     num_categorical = D - num_numerical
-    
+
     # Num observations in batch
-    obs_in_batch = x.shape[0] 
+    obs_in_batch = x.shape[0]
     for var in var_info.keys():
         num_vals = var_info[var]['num_vals']
 
@@ -149,7 +162,7 @@ def calculate_RMSE(var_info, x, x_recon):
         MSE_var = torch.sum((var_targets - var_preds) ** 2) / obs_in_batch
 
         # Summing variable MSEs - (outer-most sum of formula)
-        #MSE += MSE_var
+        # MSE += MSE_var
         # Summing variable MSEs - (outer-most sum of formula)
         MSE['regular'] += MSE_var
         # Also adding to variable type MSE
@@ -164,22 +177,24 @@ def calculate_RMSE(var_info, x, x_recon):
     for (dtype, type_count) in {'regular': D, 'numerical': num_numerical, 'categorical': num_categorical}.items():
         RMSE[dtype] = torch.sqrt(MSE[dtype]).item() / type_count
 
-    # Updating numerical and categorical RMSE to represent an accurate ratio of Regular RMSE - that sums to regular. 
-    RMSE['numerical'], RMSE['categorical'] = [RMSE['regular'] * (RMSE[dtype] / (RMSE['numerical'] + RMSE['categorical'])) for dtype in ['numerical', 'categorical']]    
+    # Updating numerical and categorical RMSE to represent an accurate ratio of Regular RMSE - that sums to regular.
+    RMSE['numerical'], RMSE['categorical'] = [
+        RMSE['regular'] * (RMSE[dtype] / (RMSE['numerical'] + RMSE['categorical'])) for dtype in
+        ['numerical', 'categorical']]
 
     return RMSE
 
-def calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio):
 
+def calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio):
     # Number of variable-types
     D = len(var_info.keys())
     num_numerical = sum([var_info[var]['dtype'] == 'numerical' for var in var_info.keys()])
     num_categorical = D - num_numerical
 
-    imputation_RMSE = {} # Initializing RMSE score
+    imputation_RMSE = {}  # Initializing RMSE score
 
     # Getting imputation mask
-    imputation_mask = create_imputation_mask(test_batch, var_info, imputation_ratio = 0.5)
+    imputation_mask = create_imputation_mask(test_batch, var_info, imputation_ratio=0.5)
 
     # Setting imputed variables to zero
     imputed_test_batch = (test_batch * imputation_mask)
@@ -210,8 +225,10 @@ def calculate_imputation_error(var_info, test_batch, model, device, imputation_r
             idx_slice = num_vals
 
         # Imputation targets and predictions - for variable
-        imputation_targets = test_batch[:, var_idx:var_idx + idx_slice][imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
-        imputation_preds = reconstructed_test_batch[:, var_idx:var_idx + idx_slice][imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
+        imputation_targets = test_batch[:, var_idx:var_idx + idx_slice][
+            imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
+        imputation_preds = reconstructed_test_batch[:, var_idx:var_idx + idx_slice][
+            imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
 
         # MSE per variable - for all unobserved slots (inner-most sum of formula)
         # The number of unobserved slots can be accessed as:
@@ -234,15 +251,16 @@ def calculate_imputation_error(var_info, test_batch, model, device, imputation_r
     for (dtype, type_count) in {'regular': D, 'numerical': num_numerical, 'categorical': num_categorical}.items():
         imputation_RMSE[dtype] = torch.sqrt(imputation_MSE[dtype]).item() / type_count
 
-    #[imputation_RMSE[dtype].append(torch.sqrt(imputation_MSE[dtype]).item() / type_count) for (dtype, type_count) in
+    # [imputation_RMSE[dtype].append(torch.sqrt(imputation_MSE[dtype]).item() / type_count) for (dtype, type_count) in
     # {'regular': D, 'numerical': num_numerical, 'categorical': num_categorical}.items()]
 
-    imputation_RMSE['numerical'], imputation_RMSE['categorical'] = [imputation_RMSE['regular'] * (imputation_RMSE[dtype] / (imputation_RMSE['numerical'] + imputation_RMSE['categorical'])) for dtype in ['numerical', 'categorical']]
+    imputation_RMSE['numerical'], imputation_RMSE['categorical'] = [imputation_RMSE['regular'] * (
+                imputation_RMSE[dtype] / (imputation_RMSE['numerical'] + imputation_RMSE['categorical'])) for dtype in
+                                                                    ['numerical', 'categorical']]
     return imputation_RMSE
 
 
 def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0.5):
-
     # dataframe containing all results
     results_df = pd.DataFrame()
 
@@ -250,7 +268,7 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
     torch_rmse = []
     for indx_batch, test_batch in enumerate(test_loader):
 
-        results_dict = {} # initialize empty
+        results_dict = {}  # initialize empty
 
         # calculating imputation error
         imputation_errors = calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio)
@@ -258,6 +276,8 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
 
         # calculating NLL and RMSE
         output, loss, nll = model.forward(test_batch, reconstruct=True, nll=True)
+        results_dict['NLL'] = nll.item()
+
         # descaling
         if model.scale_type == 'outside_model':
             if model.scale == 'standardize':
@@ -266,11 +286,9 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
             elif model.scale == 'normalize':
                 output = denorm_num(model.var_info, output)
                 test_batch = denorm_num(model.var_info, test_batch)
-
-        results_dict['NLL'] = nll.item()
         rmse = calculate_RMSE(var_info, test_batch, output)
         for variable_type in rmse.keys():
-            results_dict['RMSE_'+variable_type] = rmse[variable_type]
+            results_dict['RMSE_' + variable_type] = rmse[variable_type]
 
         # generating performance dataframe
         single_results_df = pd.DataFrame.from_dict([results_dict])
@@ -279,12 +297,11 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
         # testing with pytorch
         torch_rmse.append(torch.sqrt(nn.MSELoss()(output, test_batch)))
 
-    print('torch_rmse: ', sum(torch_rmse)/len(torch_rmse))
+    print('torch_rmse: ', sum(torch_rmse) / len(torch_rmse))
     return results_df.mean(axis=0)
 
 
 def create_imputation_mask(batch, var_info, imputation_ratio=0.5):
-
     # Initializing imputation mask
     imputation_mask = np.ones(batch.shape)
     # Looping over observations
