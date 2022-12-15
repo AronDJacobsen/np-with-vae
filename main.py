@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='VAE', choices=['VAE', 'BASELINE'])
     parser.add_argument('--natural', help='Whether to use naturals or not', dest='natural', action='store_true')
     parser.add_argument('--scale', type=str, help='how to scale the data', choices=['standardize', 'normalize', 'none'])
-    parser.add_argument('--scale_type', type=str, help='see choices', choices=['batch_scaling', 'in_model', 'outside_model'])
+    parser.add_argument('--scale_type', type=str, help='see choices', choices=['batch_scaling', 'inside_model', 'outside_model'])
     parser.add_argument('--lr', help='Starting learning rate', default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
     parser.add_argument('--prior', help='"Prior type"', default='standard', choices=['standard', 'vampPrior'])

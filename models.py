@@ -282,6 +282,13 @@ class Decoder(nn.Module):
                     # normal distribution, mu and sigma returned
                     params[:, idx:idx + num_vals] = h_d[:, idx:idx + num_vals]
                     # todo???
+                    # on mu
+                    #params[:, idx:idx + 1] = torch.sigmoid(h_d[:, idx:idx + 1])
+                    # on  log var
+                    #prob_d[:, idx+1:idx + num_vals] = torch.sigmoid(h_d[:, idx+1:idx + num_vals])
+                    # log var can only be negative
+                    #   - meaning sigma has a range of [0,1]
+                    #params[:, idx+1:idx + num_vals] = -self.softplus(h_d[:, idx+1:idx + num_vals])
 
                 else:
                     # eta2 have to be negative -inf<eta2<0
@@ -544,7 +551,7 @@ class VAE(nn.Module):
         LOSS = None
         NLL = None
 
-        if self.scale_type in ['batch_scaling', 'in_model']:
+        if self.scale_type in ['batch_scaling', 'inside_model']:
             if self.scale_type == 'batch_scaling':
                 # updating scaling and de-scaling parameters
                 self.var_info = batch_scaling(self.var_info, x)
@@ -564,7 +571,7 @@ class VAE(nn.Module):
 
         params = self.decoder.decode(z)  # probability output -
 
-        if self.scale_type in ['batch_scaling', 'in_model']:
+        if self.scale_type in ['batch_scaling', 'inside_model']:
             if self.scale == 'standardize':
                 params = destand_num_params(self.var_info, params, self.natural)
             elif self.scale == 'normalize':
@@ -590,6 +597,7 @@ class VAE(nn.Module):
             #KL = torch.mean(-0.5 * torch.sum(1 + log_var_e - mu_e ** 2 - log_var_e.exp(), dim = 1), dim = 0)
             #KL = torch.sum((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),
             #               axis=1)
+            #clamp log var
             KL = self.prior.log_prob(z).sum(dim=1) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z).sum(dim=1)
             #log_pz = self.prior_z(pz_loc).log_prob(z).sum(dim=-1)  # batch_size
             #log_qz_x = self.encoder.q_z(z_loc, z_log_scale).log_prob(z).sum(dim=-1)  # batch_size

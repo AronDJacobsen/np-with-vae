@@ -189,6 +189,14 @@ def calculate_imputation_error(var_info, test_batch, model, device, imputation_r
     reconstructed_test_batch, _, _ = model.forward(imputed_test_batch,
                                                    reconstruct=True)  # [0]['output'].detach().numpy()
 
+    if model.scale_type == 'outside_model':
+        if model.scale == 'standardize':
+            reconstructed_test_batch = destand_num(model.var_info, reconstructed_test_batch)
+            test_batch = destand_num(model.var_info, test_batch)
+        elif model.scale == 'normalize':
+            reconstructed_test_batch = denorm_num(model.var_info, reconstructed_test_batch)
+            test_batch = denorm_num(model.var_info, test_batch)
+
     # Calculating RMSE based on Formula in Appendix D of Ma-paper
     var_idx = 0
     imputation_MSE = {'regular': 0, 'numerical': 0, 'categorical': 0}  # Initializing RMSE score
@@ -242,34 +250,35 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
     torch_rmse = []
     for indx_batch, test_batch in enumerate(test_loader):
 
-        #if model.scale == 'standardize':
-        #    test_batch = stand_num(var_info, test_batch)
-        #elif model.scale == 'normalize':
-        #    test_batch = norm_num(var_info, test_batch)
-        #elif model.scale == 'none':
-        #    pass
-
         results_dict = {} # initialize empty
+
+        # calculating imputation error
+        imputation_errors = calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio)
+        results_dict.update(imputation_errors)
+
+        # calculating NLL and RMSE
         output, loss, nll = model.forward(test_batch, reconstruct=True, nll=True)
+        # descaling
         if model.scale_type == 'outside_model':
             if model.scale == 'standardize':
                 output = destand_num(model.var_info, output)
+                test_batch = destand_num(model.var_info, test_batch)
             elif model.scale == 'normalize':
                 output = denorm_num(model.var_info, output)
+                test_batch = denorm_num(model.var_info, test_batch)
 
         results_dict['NLL'] = nll.item()
-
-        torch_rmse.append(torch.sqrt(nn.MSELoss()(output, test_batch)))
-
         rmse = calculate_RMSE(var_info, test_batch, output)
         for variable_type in rmse.keys():
             results_dict['RMSE_'+variable_type] = rmse[variable_type]
 
-        imputation_errors = calculate_imputation_error(var_info, test_batch, model, device, imputation_ratio)
-        results_dict.update(imputation_errors)
         # generating performance dataframe
         single_results_df = pd.DataFrame.from_dict([results_dict])
         results_df = pd.concat([results_df, single_results_df])
+
+        # testing with pytorch
+        torch_rmse.append(torch.sqrt(nn.MSELoss()(output, test_batch)))
+
     print('torch_rmse: ', sum(torch_rmse)/len(torch_rmse))
     return results_df.mean(axis=0)
 
