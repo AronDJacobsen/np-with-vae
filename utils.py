@@ -285,6 +285,7 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
     results_df = pd.DataFrame()
 
     # Looping through batches
+    torch_rmse = []
     for indx_batch, test_batch in enumerate(test_loader):
 
         #if model.scale == 'standardize':
@@ -297,6 +298,9 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
         results_dict = {} # initialize empty
         output, loss, nll = model.forward(test_batch, reconstruct=True, nll=True)
         results_dict['NLL'] = nll.item()
+
+        torch_rmse.append(torch.sqrt(nn.MSELoss()(output, test_batch)))
+
         rmse = calculate_RMSE(var_info, test_batch, output)
         for variable_type in rmse.keys():
             results_dict['RMSE_'+variable_type] = rmse[variable_type]
@@ -306,11 +310,11 @@ def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0
         # generating performance dataframe
         single_results_df = pd.DataFrame.from_dict([results_dict])
         results_df = pd.concat([results_df, single_results_df])
-
+    print('torch_rmse: ', sum(torch_rmse)/len(torch_rmse))
     return results_df.mean(axis=0)
 
 
-def create_imputation_mask(batch, var_info, imputation_ratio = 0.5):
+def create_imputation_mask(batch, var_info, imputation_ratio=0.5):
 
     # Initializing imputation mask
     imputation_mask = np.ones(batch.shape)

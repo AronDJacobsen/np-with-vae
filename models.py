@@ -128,12 +128,12 @@ class Decoder(nn.Module):
                     params[:, idx:idx + num_vals] = h_d[:, idx:idx + num_vals]
                     # todo???
                     # on mu
-                    params[:, idx:idx + 1] = torch.sigmoid(h_d[:, idx:idx + 1])
+                    #params[:, idx:idx + 1] = torch.sigmoid(h_d[:, idx:idx + 1])
                     # on  log var
                     #prob_d[:, idx+1:idx + num_vals] = torch.sigmoid(h_d[:, idx+1:idx + num_vals])
                     # log var can only be negative
                     #   - meaning sigma has a range of [0,1]
-                    params[:, idx+1:idx + num_vals] = -self.softplus(h_d[:, idx+1:idx + num_vals])
+                    #params[:, idx+1:idx + num_vals] = -self.softplus(h_d[:, idx+1:idx + num_vals])
 
                 else:
                     # eta2 have to be negative -inf<eta2<0
@@ -163,7 +163,11 @@ class Decoder(nn.Module):
 
             if self.var_info[var]['dtype'] == 'categorical':
 
-                outs = params[:,output_idx:output_idx + num_vals]
+                if self.natural:  # note that outputs are just logits of probability
+                    outs = self.softmax(params[:, output_idx:output_idx + num_vals])
+                else:
+                    outs = params[:, output_idx:output_idx + num_vals]
+
                 # TODO: output and x_recon can't be accessed similarly.
                 outs = outs.view(outs.shape[0], -1, num_vals)
                 p = outs.view(-1, num_vals)
