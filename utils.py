@@ -200,7 +200,6 @@ def calculate_RMSE(var_info, x, x_recon):
         MSE['regular'] += MSE_var
         # Also adding to variable type MSE
         MSE[var_info[var]['dtype']] += MSE_var
-
         # Updating current variable index
         if var_info[var]['dtype'] == 'numerical':
             var_idx += 1
@@ -280,13 +279,21 @@ def calculate_imputation_error(var_info, test_batch, model, device, imputation_r
     return imputation_RMSE
 
 
-def get_test_results(model, test_loader, var_info, device, imputation_ratio=0.5):
+def get_test_results(model, test_loader, var_info, D, device, imputation_ratio=0.5):
 
     # dataframe containing all results
     results_df = pd.DataFrame()
 
     # Looping through batches
     for indx_batch, test_batch in enumerate(test_loader):
+
+        #if model.scale == 'standardize':
+        #    test_batch = stand_num(var_info, test_batch)
+        #elif model.scale == 'normalize':
+        #    test_batch = norm_num(var_info, test_batch)
+        #elif model.scale == 'none':
+        #    pass
+
         results_dict = {} # initialize empty
         output, loss, nll = model.forward(test_batch, reconstruct=True, nll=True)
         results_dict['NLL'] = nll.item()
