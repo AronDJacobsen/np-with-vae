@@ -267,6 +267,65 @@ class Prior(nn.Module):
     def log_prob(self, z):
         return log_standard_normal(z)
 
+class VampPrior(nn.Module):
+    def __init__(self, L, D, num_vals, encoder, num_components, data=None):
+        super(VampPrior, self).__init__()
+
+        self.L = L
+        self.D = D
+        self.num_vals = num_vals
+
+        self.encoder = encoder
+
+        # pseudoinputs
+        u = torch.rand(num_components, D) * self.num_vals
+        self.u = nn.Parameter(u)
+
+        # mixing weights
+        self.w = nn.Parameter(torch.zeros(self.u.shape[0], 1, 1)) # K x 1 x 1
+
+    def get_params(self):
+        # u->encoder->mu, lof_var
+        mean_vampprior, logvar_vampprior = self.encoder.encode(self.u) #(K x L), (K x L)
+        return mean_vampprior, logvar_vampprior
+
+    def sample(self, batch_size):
+        # u->encoder->mu, lof_var
+        mean_vampprior, logvar_vampprior = self.get_params()
+
+        # mixing probabilities
+        w = F.softmax(self.w, dim=0) # K x 1 x 1 
+        w = w.squeeze()
+
+        # pick components
+        indexes = torch.multinomial(w, batch_size, replacement=True)
+
+        # means and logvars
+        eps = torch.randn(batch_size, self.L)
+        for i in range(batch_size):
+            indx = indexes[i]
+            if i == 0:
+                z = mean_vampprior[[indx]] + eps[[i]] * torch.exp(logvar_vampprior[[indx]])
+            else:
+                z = torch.cat((z, mean_vampprior[[indx]] + eps[[i]] * torch.exp(logvar_vampprior[[indx]])), 0)
+        return z
+
+    def log_prob(self, z):
+        # u->encoder->mu, lof_var
+        mean_vampprior, logvar_vampprior = self.get_params() # (K x L) & (K x L)
+
+        # mixing probabilities
+        w = F.softmax(self.w, dim=0) # K x 1 x 1
+
+        # log-mixture-of-Gaussians
+        z = z.unsqueeze(0) # 1 x B x L
+        mean_vampprior = mean_vampprior.unsqueeze(1) # K x 1 x L
+        logvar_vampprior = logvar_vampprior.unsqueeze(1) # K x 1 x L
+
+        log_p = log_normal_diag(z, mean_vampprior, logvar_vampprior) + torch.log(w) # K x B x L
+        log_prob = torch.logsumexp(log_p, dim=0, keepdim=False) # B x L
+
+        return log_prob # B 
 
 def normalize_numerical(var_info, data, D):
     new_data = torch.zeros((len(data), D))
@@ -304,7 +363,7 @@ def denormalize_numerical_distribution(mu_orig, std_orig, mu, log_var):
 
 
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info, D, M, natural, device):
+    def __init__(self, total_num_vals, L, var_info, D, M, natural, device, prior:str):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -320,8 +379,10 @@ class VAE(nn.Module):
         self.encoder = Encoder(encoder_net=encoder_net)
         self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,
                                natural=natural, device=device)
-
-        self.prior = Prior(L=L)
+        if prior == 'vampPrior':
+            self.prior = VampPrior(L=L, D=D, num_vals=total_num_vals, encoder=self.encoder, num_components=total_num_vals)
+        else:
+            self.prior = Prior(L=L)
         self.total_num_vals = total_num_vals
         self.var_info = var_info  # contains type of likelihood for variables
         self.D = D

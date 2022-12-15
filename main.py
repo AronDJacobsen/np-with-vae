@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--natural', help='Whether to use naturals or not', dest='natural', action='store_true')
     parser.add_argument('--lr', help='Starting learning rate', default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
+    parser.add_argument('--prior', help='"Prior type"', default='standard', choices=['standard', 'vampPrior'])
 
     # dataset
     parser.add_argument('--dataset', type=str, default='avocado', choices=['boston', 'avocado', 'energy', 'bank'])
@@ -94,7 +95,7 @@ if __name__ == '__main__':
     # model = VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=args.natural, device=device)
 
     model = get_model(model_name=args.model, total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M,
-                      natural=args.natural, device=device)
+                      natural=args.natural, device=device, prior=args.prior)
     model = model.to(device)
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
