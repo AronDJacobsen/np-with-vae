@@ -488,7 +488,7 @@ class VampPrior(nn.Module):
 
 class VAE(nn.Module):
     def __init__(self, total_num_vals, L, var_info, D, M, natural, device, prior: str, beta=1.0,
-                 scale='none', scale_type='none'):
+                 scale='none', scale_type='none', decay=False):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -536,17 +536,15 @@ class VAE(nn.Module):
         self.beta = beta
         self.scale_type = scale_type
         self.natural = natural
-        self.NM = (506*0.8)/32
-        self.MN = 32/(506*0.8)
-        self.batch = 0
+        self.decay = decay
         self.epoch = 0
-        self.dataset = 0
 
-    def forward(self, x, loss=True, reconstruct=False, nll=False, reduction='sum'):
+    def forward(self, x, loss=True, reconstruct=False, nll=False, reduction='sum', epoch=None):
 
-        self.batch += 1
-        self.epoch = (self.batch // 12) + 1
-
+        if epoch is not None:
+            self.epoch = epoch
+        
+        # self.epoch = (self.batch // 12) + 1
 
         # Initializing outputs
         RECONSTRUCTION = None
@@ -604,7 +602,8 @@ class VAE(nn.Module):
             #log_qz_x = self.encoder.q_z(z_loc, z_log_scale).log_prob(z).sum(dim=-1)  # batch_size
             # summing the loss for this batch
             # torch.sqrt(F.mse_loss(self.decoder.sample(z), x))
-            LOSS = -(RE + 1/self.epoch * self.beta * KL).sum(dim=0)  # self.calculate_RMSE(x, self.decoder.sample(params))['regular']
+
+            LOSS = -(RE + (1/(self.epoch+1) if self.decay else 1) * self.beta * KL).sum(dim=0)  # self.calculate_RMSE(x, self.decoder.sample(params))['regular']
 
         if nll:
             assert (nll and loss) == True, 'loss also has to be true in input for forward call'
@@ -644,7 +643,8 @@ class VAE(nn.Module):
             var_preds = x_recon[:, var_idx:var_idx + idx_slice]
 
             # MSE per variable
-            assert F.mse_loss(var_preds, var_targets) * idx_slice == torch.sum((var_targets - var_preds) ** 2) / obs_in_batch
+            assert F.mse_loss(var_preds, var_targets) * idx_slice == torch.sum(
+                (var_targets - var_preds) ** 2) / obs_in_batch
             MSE_var = torch.sum((var_targets - var_preds) ** 2) / obs_in_batch
 
             # Summing variable MSEs - (outer-most sum of formula)

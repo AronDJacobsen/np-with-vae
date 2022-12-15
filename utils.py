@@ -5,9 +5,9 @@ import torch
 from models import *
 
 
-def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device,prior,beta, scale, scale_type):
+def get_model(model_name, total_num_vals, L, var_info, D, M, natural, device,prior,beta, scale, scale_type, decay):
     if model_name == 'VAE':
-        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device,prior=prior,beta=beta, scale=scale, scale_type=scale_type)
+        return VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=natural, device=device,prior=prior,beta=beta, scale=scale, scale_type=scale_type, decay=decay)
     elif model_name == 'BASELINE':
         # todo make it train and able to evaluate like the other
         return Baseline()

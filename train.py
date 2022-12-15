@@ -18,7 +18,7 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
                 if model.dequantization:
                     batch = batch + torch.rand(batch.shape)
             batch = batch.to(device) # Not normalized
-            _, loss, _ = model.forward(batch)
+            _, loss, _ = model.forward(batch, epoch=e)
             optimizer.zero_grad()
             loss.backward(retain_graph=True)
             optimizer.step()

@@ -25,11 +25,12 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='VAE', choices=['VAE', 'BASELINE'])
     parser.add_argument('--natural', help='Whether to use naturals or not', dest='natural', action='store_true')
     parser.add_argument('--scale', type=str, help='how to scale the data', choices=['standardize', 'normalize', 'none'])
-    parser.add_argument('--scale_type', type=str, help='see choices', choices=['batch_scaling', 'inside_model', 'outside_model'])
+    parser.add_argument('--scale_type', type=str, help='see choices', choices=['batch_scaling', 'in_model', 'outside_model'])
     parser.add_argument('--lr', help='Starting learning rate', default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
     parser.add_argument('--prior', help='"Prior type"', default='standard', choices=['standard', 'vampPrior'])
     parser.add_argument('--beta', help='"beta value in KL divergence"', default=1, type=float)
+    parser.add_argument('--decay', help='"Decay in KL divergence"', default=False, type=bool)
 
     # dataset
     parser.add_argument('--dataset', type=str, default='avocado', choices=['boston', 'avocado', 'energy', 'bank'])
@@ -99,7 +100,7 @@ if __name__ == '__main__':
 
     model = get_model(model_name=args.model, total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M,
                       natural=args.natural, device=device, prior=args.prior, beta=args.beta,
-                      scale=args.scale, scale_type=args.scale_type)
+                      scale=args.scale, scale_type=args.scale_type, decay=args.decay)
     model = model.to(device)
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)
