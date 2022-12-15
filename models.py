@@ -418,7 +418,7 @@ class VAE(nn.Module):
         self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,
                                natural=natural, scale=scale, device=device)
         if prior == 'vampPrior':
-            self.prior = VampPrior(L=L, D=D, num_vals=total_num_vals, encoder=self.encoder, num_components=16)
+            self.prior = VampPrior(L=L, D=D, num_vals=total_num_vals, encoder=self.encoder, num_components=len(var_info))
         else:
             self.prior = Prior(L=L)
         self.total_num_vals = total_num_vals

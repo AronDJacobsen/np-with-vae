@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
 
     # Experiment
-    # parser.add_argument('--experiment', type=str, help='unique experiment name', default='default')
+    parser.add_argument('--experiment', type=str, help='unique experiment name', default='default')
     parser.add_argument('--mode', type=str, help='training or evaluating', choices=['train', 'test', 'traintest'])
 
     # model parameters
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     logger = Logger(directory='runs', comment="_VAE", write=args.write)
 
     ## Creating directory for test results
-    result_dir = 'results/' + 'thinlinc/Results/' + args.dataset + '/'
+    result_dir = 'results/' + 'thinlinc/Results/' + '/'
     if not (os.path.exists(result_dir)):
         os.mkdir(result_dir)
     name = 'vae'
