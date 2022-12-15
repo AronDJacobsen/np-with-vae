@@ -11,7 +11,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--mode", "traintest", "--device", "cpu", "--experiment","thinlinc/Results/boston", "--dataset", "boston", "--prior", "vampPrior", "--max_epochs", "20", "--scale", "normalize", "--beta", "1"]
+            "args": ["--mode", "traintest", "--natural", "--device", "cpu", "--experiment","thinlinc/Results/boston", "--dataset", "boston", "--prior", "vampPrior", "--max_epochs", "20", "--max_patience", "100", "--scale", "normalize", "--beta", "1"]
         }
     ]
 }
