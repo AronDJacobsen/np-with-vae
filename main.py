@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
 
     # Experiment
-    parser.add_argument('--experiment', type=str, help='unique experiment name', default='default')
+    # parser.add_argument('--experiment', type=str, help='unique experiment name', default='default')
     parser.add_argument('--mode', type=str, help='training or evaluating', choices=['train', 'test', 'traintest'])
 
     # model parameters
@@ -28,6 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', help='Starting learning rate', default=3e-4, type=float)
     parser.add_argument('--batch_size', help='"Batch size"', default=32, type=int)
     parser.add_argument('--prior', help='"Prior type"', default='standard', choices=['standard', 'vampPrior'])
+    parser.add_argument('--beta', help='"beta value in KL divergence"', default=1, type=float)
 
     # dataset
     parser.add_argument('--dataset', type=str, default='avocado', choices=['boston', 'avocado', 'energy', 'bank'])
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     logger = Logger(directory='runs', comment="_VAE", write=args.write)
 
     ## Creating directory for test results
-    result_dir = 'results/' + args.experiment + '/'
+    result_dir = 'results/' + 'thinlinc/Results/' + args.dataset + '/'
     if not (os.path.exists(result_dir)):
         os.mkdir(result_dir)
     name = 'vae'
@@ -96,7 +97,7 @@ if __name__ == '__main__':
     # model = VAE(total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M, natural=args.natural, device=device)
 
     model = get_model(model_name=args.model, total_num_vals=total_num_vals, L=L, var_info=var_info, D=D, M=M,
-                      natural=args.natural, scale=args.scale, device=device, prior=args.prior)
+                      natural=args.natural, scale=args.scale, device=device, prior=args.prior, beta=args.beta)
     model = model.to(device)
     # OPTIMIZER
     optimizer = torch.optim.Adamax([p for p in model.parameters() if p.requires_grad == True], lr=args.lr)

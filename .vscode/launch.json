@@ -8,10 +8,10 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--mode", "test", "--experiment", "thinlinc/Results/bank", "--device", "cpu", "--dataset", "bank"]
+            "args": ["--mode", "traintest", "--device", "cpu", "--dataset", "bank", "--prior", "vampPrior", "--max_epochs", "20", "--scale", "normalize", "--beta", "1"]
         }
     ]
 }

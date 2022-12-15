@@ -401,7 +401,7 @@ def denorm_num_dist(min, max, mu, log_var):
 
 
 class VAE(nn.Module):
-    def __init__(self, total_num_vals, L, var_info, D, M, natural, scale, device, prior:str):
+    def __init__(self, total_num_vals, L, var_info, D, M, natural, scale, device, prior:str,beta=1.0):
         super().__init__()
 
         encoder_net = nn.Sequential(nn.Linear(D, M), nn.LeakyReLU(),
@@ -418,7 +418,7 @@ class VAE(nn.Module):
         self.decoder = Decoder(var_info=var_info, decoder_net=decoder_net, total_num_vals=total_num_vals,
                                natural=natural, scale=scale, device=device)
         if prior == 'vampPrior':
-            self.prior = VampPrior(L=L, D=D, num_vals=total_num_vals, encoder=self.encoder, num_components=total_num_vals)
+            self.prior = VampPrior(L=L, D=D, num_vals=total_num_vals, encoder=self.encoder, num_components=16)
         else:
             self.prior = Prior(L=L)
         self.total_num_vals = total_num_vals
@@ -426,6 +426,7 @@ class VAE(nn.Module):
         self.D = D
         self.device = device
         self.scale = scale
+        self.beta = beta
         # todo: self.normalizing stuff
 
     def forward(self, x, loss=True, reconstruct=False, nll=False, reduction='sum'):
@@ -473,7 +474,7 @@ class VAE(nn.Module):
             # todo mean or sum?
             KL = torch.mean((self.prior.log_prob(z) - self.encoder.log_prob(mu_e=mu_e, log_var_e=log_var_e, z=z)),axis=1)
             # summing the loss for this batch
-            LOSS = -(RE + KL).sum()
+            LOSS = -(RE + self.beta * KL).sum()
 
         if nll:
             assert (nll and loss) == True, 'loss also has to be true in input for forward call'
