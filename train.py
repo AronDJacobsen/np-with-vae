@@ -28,7 +28,7 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
         loss_val = evaluation(model=model, data_loader=val_loader, device=device)
         logger.write_to_board(name="Validation", scalars={"NLL": loss_val}, index=e)
         print(f'Epoch: {e}, loss val={loss_val}')
-        nll_val.append(loss_val.detach())  # save for plotting
+        nll_val.append(loss_val.detach().cpu())  # save for plotting
 
         if e == 0:
             print('saved!')

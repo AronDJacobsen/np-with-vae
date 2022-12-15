@@ -455,6 +455,7 @@ class VAE(nn.Module):
             pass
 
         # Encode
+        x = x.to(self.device)
         mu_e, log_var_e = self.encoder.encode(x)
         # sample in latent space
         z = self.encoder.sample(mu_e=mu_e, log_var_e=log_var_e)

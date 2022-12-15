@@ -249,10 +249,8 @@ def calculate_imputation_error(var_info, test_batch, model, device, imputation_r
             idx_slice = num_vals
 
         # Imputation targets and predictions - for variable
-        imputation_targets = test_batch[:, var_idx:var_idx + idx_slice][
-            imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
-        imputation_preds = reconstructed_test_batch[:, var_idx:var_idx + idx_slice][
-            imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
+        imputation_targets = test_batch[:, var_idx:var_idx + idx_slice][imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
+        imputation_preds = reconstructed_test_batch[:, var_idx:var_idx + idx_slice][imputation_mask[:, var_idx:var_idx + idx_slice] == 0]
 
         # MSE per variable - for all unobserved slots (inner-most sum of formula)
         # The number of unobserved slots can be accessed as:
@@ -335,5 +333,5 @@ def create_imputation_mask(batch, var_info, imputation_ratio = 0.5):
                 # Put into mask
                 imputation_mask[obs_idx, :][idx1:idx2] = 0
 
-    return imputation_mask
+    return torch.tensor(imputation_mask)
 

@@ -49,7 +49,7 @@ if __name__ == '__main__':
     logger = Logger(directory='runs', comment="_VAE", write=args.write)
 
     ## Creating directory for test results
-    result_dir = 'results/' + 'thinlinc/Results/' + '/'
+    result_dir = 'thinlinc/Results/' + args.experiment + '/'
     if not (os.path.exists(result_dir)):
         os.mkdir(result_dir)
     name = 'vae'
