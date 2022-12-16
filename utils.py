@@ -50,6 +50,7 @@ def evaluation(model, data_loader, device, reduction='sum'):
     for indx_batch, batch in enumerate(data_loader):
         batch = batch.to(device)
         output, loss, _ = model.forward(batch, reconstruct=True, reduction=reduction)
+        output = output.to(device)
 
         # descaling
         if model.scale_type == 'outside_model':
