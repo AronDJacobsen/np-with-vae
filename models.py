@@ -553,7 +553,7 @@ class VAE(nn.Module):
         LOSS = None
         NLL = None
 
-        if self.scale_type in ['batch_scaling', 'in_model']:
+        if self.scale_type in ['batch_scaling', 'inside_model']:
             if self.scale_type == 'batch_scaling':
                 # updating scaling and de-scaling parameters
                 self.var_info = batch_scaling(self.var_info, x)
@@ -574,7 +574,7 @@ class VAE(nn.Module):
 
         params = self.decoder.decode(z)  # probability output -
 
-        if self.scale_type in ['batch_scaling', 'in_model']:
+        if self.scale_type in ['batch_scaling', 'inside_model']:
             if self.scale == 'standardize':
                 params = destand_num_params(self.var_info, params, self.natural)
             elif self.scale == 'normalize':

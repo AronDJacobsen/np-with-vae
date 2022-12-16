@@ -22,8 +22,10 @@ def log_categorical(x, p, reduction='sum', dim=None):
         return log_p
 
 def categorical(x, p, num_classes=256, reduction=None, dim=None):
-    x_one_hot = F.one_hot(x.long(), num_classes=num_classes)
-    p = x_one_hot * (torch.clamp(p, EPS, 1. - EPS))
+    #x_one_hot = F.one_hot(x.long(), num_classes=num_classes)
+    #p = x_one_hot * (torch.clamp(p, EPS, 1. - EPS))
+    p = x * (torch.clamp(p, EPS, 1. - EPS))
+
     if reduction == 'avg':
         return torch.mean(p, dim)
     elif reduction == 'sum':
