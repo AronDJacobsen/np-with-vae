@@ -21,6 +21,12 @@ def log_categorical(x, p, reduction='sum', dim=None):
     else:
         return log_p
 
+def log_categorical_natural(x, p, reduction='sum'):
+    log_p = x * torch.log(torch.clamp(p, EPS, 1. - EPS))
+
+    return log_p
+
+
 def categorical(x, p, num_classes=256, reduction=None, dim=None):
     #x_one_hot = F.one_hot(x.long(), num_classes=num_classes)
     #p = x_one_hot * (torch.clamp(p, EPS, 1. - EPS))
@@ -48,6 +54,7 @@ def log_normal(x, mu, log_var, reduction=None, dim=None):
     #log_p = -0.5 * torch.log(2. * PI) - 0.5 * log_var - 0.5 * torch.exp(-log_var) * (x - mu)**2.
     # the same:
     log_p = torch.distributions.normal.Normal(mu, torch.sqrt(torch.exp(0.5*log_var))).log_prob(x)
+
     if reduction == 'avg':
         return torch.mean(log_p, dim)
     elif reduction == 'sum':
@@ -55,6 +62,25 @@ def log_normal(x, mu, log_var, reduction=None, dim=None):
     else:
         return log_p
 
+
+def log_normal_natural(x, eta1, eta2, reduction=None, dim=None):
+    #log_p = torch.distributions.normal.Normal(mu, torch.sqrt(torch.exp(0.5*log_var))).log_prob(x)
+    #torch.cholesky(eta1)
+    log_p = torch.log(torch.tensor([1]) / torch.sqrt(2*PI)) + eta1*x + eta2*(x**2) + (eta1**2)/4*eta2 + torch.log(-2*eta2)/2
+    '''
+    precmu   = g.theta1
+    sqrtprec = chol(-g.theta2)
+    tmp      = sqrtprec'\precmu
+    fun(x)   = ( dot(x,g.theta2*x) + 2dot(x,precmu) )/2
+    result   = sum(neghalflog2pi + log.(diag(sqrtprec))) - norm(tmp)^2/2
+    result  += funarray(fun, x, length(precmu), axis)
+    '''
+    if reduction == 'avg':
+        return torch.mean(log_p, dim)
+    elif reduction == 'sum':
+        return torch.sum(log_p, dim)
+    else:
+        return log_p
 
 
 # TODO: log normal per class as well (how likely is mu wrt. a mu/sigma)

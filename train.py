@@ -21,6 +21,7 @@ def training(logger, save_path, max_patience, num_epochs, model, optimizer, trai
             _, loss, _ = model.forward(batch, epoch=e)
             optimizer.zero_grad()
             loss.backward(retain_graph=True)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
             optimizer.step()
 
         # Validation
