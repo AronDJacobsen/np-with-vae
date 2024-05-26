@@ -6,9 +6,9 @@ Heterogeneous data consists of features of different types: real-valued numerica
 
 These probability distributions belong to the [*exponential family*](https://en.wikipedia.org/wiki/Exponential_family#Table_of_distributions). All distributions in the *exponential family* can be written on the same form:
 ```math
-  p(x | \bm{\eta}) = h(x) \exp{ \left( \bm{\eta}^T T(x) - A(\bm{\eta}) \right)}
+  p(x | \boldsymbol{\eta}) = h(x) \exp{ \left( \boldsymbol{\eta}^T T(x) - A(\boldsymbol{\eta}) \right)}
 ``` 
-parameterised by their natural parameters $`\bm{\eta}`$ and functions $`h(x)`$,, $`T(x)`$ and $`A(\bm{\eta}`)`$. 
+parameterised by their natural parameters $`\boldsymbol{\eta}`$ and functions $`h(x)`$, $`T(x)`$ and $`A(\boldsymbol{\eta})`$. 
 
 # Models
 Models are available in the following (link)[https://drive.google.com/drive/folders/1XtPi0XuG5Kq4xLCGlalLTLzxz_0piOz-?usp=sharing]
