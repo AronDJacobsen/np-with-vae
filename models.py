@@ -376,10 +376,13 @@ class Decoder(nn.Module):
 
                 if self.natural:  # note that outputs are just logits of probability
                     probs = self.softmax(params[:, params_idx:params_idx + num_vals])
+                    # todo
+                    log_categorical_natural(x[:, x_idx:x_idx + num_vals], probs)
+                    log_p[:, var] = log_categorical(x[:, x_idx:x_idx + num_vals], probs, reduction='sum', dim=1)  # .sum(-1)
+
                 else:
                     probs = params[:, params_idx:params_idx + num_vals]
-
-                log_p[:, var] = log_categorical(x[:, x_idx:x_idx + num_vals], probs, reduction='sum', dim=1)  # .sum(-1)
+                    log_p[:, var] = log_categorical(x[:, x_idx:x_idx + num_vals], probs, reduction='sum', dim=1)  # .sum(-1)
 
                 params_idx += num_vals
                 x_idx += num_vals
@@ -392,11 +395,13 @@ class Decoder(nn.Module):
                     #eta1, eta2 = torch.chunk(params[:, params_idx:params_idx + num_vals], 2, dim=1)
                     # restricting eta2 to be -inf < eta2 < 0
                     #mu, log_var = -0.5 * eta1 / eta2, torch.log(-0.5 / eta2)
-                    mu, log_var = to_params(params[:, params_idx:params_idx + num_vals])
+                    #mu, log_var = to_params(params[:, params_idx:params_idx + num_vals])
+                    eta1, eta2 = torch.chunk(params[:, params_idx:params_idx + num_vals], 2, dim=1)
+                    log_p[:, var] = log_normal_natural(x[:, x_idx:x_idx + 1], eta1, eta2, reduction='sum', dim=1)
+
                 else:
                     mu, log_var = torch.chunk(params[:, params_idx:params_idx + num_vals], 2, dim=1)
-
-                log_p[:, var] = log_normal(x[:, x_idx:x_idx + 1], mu, log_var, reduction='sum', dim=1)
+                    log_p[:, var] = log_normal(x[:, x_idx:x_idx + 1], mu, log_var, reduction='sum', dim=1)
                 params_idx += num_vals
                 x_idx += 1
 
@@ -553,7 +558,7 @@ class VAE(nn.Module):
         LOSS = None
         NLL = None
 
-        if self.scale_type in ['batch_scaling', 'in_model']:
+        if self.scale_type in ['batch_scaling', 'inside_model']:
             if self.scale_type == 'batch_scaling':
                 # updating scaling and de-scaling parameters
                 self.var_info = batch_scaling(self.var_info, x)
@@ -574,7 +579,7 @@ class VAE(nn.Module):
 
         params = self.decoder.decode(z)  # probability output -
 
-        if self.scale_type in ['batch_scaling', 'in_model']:
+        if self.scale_type in ['batch_scaling', 'inside_model']:
             if self.scale == 'standardize':
                 params = destand_num_params(self.var_info, params, self.natural)
             elif self.scale == 'normalize':
