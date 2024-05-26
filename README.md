@@ -11,4 +11,4 @@ These probability distributions belong to the [*exponential family*](https://en.
 parameterised by their natural parameters $`\boldsymbol{\eta}`$ and functions $`h(x)`$, $`T(x)`$ and $`A(\boldsymbol{\eta})`$. 
 
 # Models
-Models are available in the following (link)[https://drive.google.com/drive/folders/1XtPi0XuG5Kq4xLCGlalLTLzxz_0piOz-?usp=sharing]
+Models are available in the following [link](https://drive.google.com/drive/folders/1XtPi0XuG5Kq4xLCGlalLTLzxz_0piOz-?usp=sharing)
